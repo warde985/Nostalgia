@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="page.title">فحص الروابط — نوستالجيا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c1420;
+    --ink-2:#101b2c;
+    --panel:#152238;
+    --panel-2:#1a2a45;
+    --line: rgba(233,228,212,0.09);
+    --text:#eae6da;
+    --text-dim:#8fa0b8;
+    --text-dark:#20283a;
+    --gold:#c9a15c;
+    --gold-ink:#c9a15c;
+    --gold-soft: rgba(201,161,92,0.16);
+    --teal:#4fb3a9;
+    --teal-soft: rgba(79,179,169,0.15);
+    --brick:#c0533b;
+    --brick-ink:#c0533b;
+    --brick-soft: rgba(192,83,59,0.15);
+    --parchment:#efe9da;
+    --parchment-2:#e6dfc9;
+    --nav-bg: rgba(12,20,32,0.72);
+    --pin-bg: rgba(16,27,44,0.9);
+    --ring-line:#e9e4d4;
+    --shadow-strong: 0 40px 80px -30px rgba(0,0,0,0.55);
+    --shadow-mockup: 0 30px 60px -20px rgba(0,0,0,0.6);
+    --radius: 18px;
+  }
+  html[data-theme="light"]{
+    --ink:#eef1f5;
+    --ink-2:#e5e9ef;
+    --panel:#ffffff;
+    --panel-2:#eef1f0;
+    --line: rgba(32,40,58,0.11);
+    --text:#1c2536;
+    --text-dim:#5b6473;
+    --gold-ink:#8a6526;
+    --gold-soft: rgba(201,161,92,0.22);
+    --teal:#2f8f86;
+    --teal-soft: rgba(47,143,134,0.14);
+    --brick-ink:#a23f2c;
+    --brick-soft: rgba(162,63,44,0.12);
+    --nav-bg: rgba(255,255,255,0.78);
+    --pin-bg: rgba(255,255,255,0.92);
+    --ring-line:#20283a;
+    --shadow-strong: 0 30px 60px -30px rgba(20,20,30,0.18);
+    --shadow-mockup: 0 20px 45px -20px rgba(20,20,30,0.22);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Tajawal', sans-serif;
+    line-height:1.8;
+    overflow-x:hidden;
+    transition: background .35s ease, color .35s ease;
+  }
+  h1,h2,h3, .display{
+    font-family:'Cairo','Tajawal', sans-serif;
+    margin:0;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em; }
+  a{ color:inherit; }
+  img{max-width:100%;display:block;}
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 28px; }
+  @media (max-width:420px){ .wrap{ padding:0 18px; } }
+  ::selection{ background: var(--gold); color:#1a1204; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ---------------- NAV (shared with home page) ---------------- */
+  header.nav{
+    position:fixed; inset:0 0 auto 0; z-index:50;
+    backdrop-filter: blur(10px);
+    background: var(--nav-bg);
+    border-bottom:1px solid var(--line);
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .nav-inner{
+    max-width:1120px; margin:0 auto; padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    direction:rtl;
+    flex-wrap:nowrap;
+  }
+  .nav-inner .nav-links,
+  .nav-inner .nav-controls,
+  .nav-inner .brand{ direction:rtl; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Cairo'; font-weight:800; font-size:1.05rem; }
+  .brand-mark{
+    width:30px;height:30px; border-radius:50%;
+    border:2px solid var(--gold-ink);
+    display:flex;align-items:center;justify-content:center;
+    position:relative; flex-shrink:0;
+  }
+  .brand-mark::after{
+    content:""; width:9px;height:9px;border-radius:50%; background:var(--gold-ink);
+  }
+  .nav-links{ display:flex; gap:24px; font-size:0.86rem; color:var(--text-dim); }
+  .nav-links a{ text-decoration:none; transition:color .2s; white-space:nowrap; }
+  .nav-links a:hover{ color:var(--gold-ink); }
+  .nav-links a[aria-current="page"]{ color:var(--gold-ink); }
+  .nav-links a:focus-visible, a:focus-visible, button:focus-visible{ outline:2px solid var(--gold-ink); outline-offset:3px; border-radius:3px; }
+
+  .nav-controls .burger-btn{ display:none; }
+
+  @media (max-width:820px){
+    .nav-links{
+      display:flex; flex-direction:column; gap:2px;
+      position:absolute; top:100%; inset-inline:0;
+      background:var(--panel); border-bottom:1px solid var(--line);
+      padding:10px 22px 18px;
+      max-height:0; overflow:hidden;
+      opacity:0;
+      transition: max-height .3s ease, opacity .25s ease, padding .3s ease;
+    }
+    .nav-links a{
+      padding:12px 6px; border-bottom:1px solid var(--line);
+      white-space:normal;
+    }
+    .nav-links a:last-child{ border-bottom:none; }
+    header.nav.menu-open .nav-links{
+      max-height:70vh; opacity:1; padding:10px 22px 18px;
+    }
+    .nav-controls .burger-btn{ display:flex; }
+  }
+
+  .nav-controls{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .ctrl-btn{
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--line); background:var(--panel);
+    color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .ctrl-btn:hover{ border-color:var(--gold-ink); color:var(--gold-ink); }
+  .ctrl-btn svg{ width:18px; height:18px; }
+  .icon-moon{ display:none; }
+  html[data-theme="light"] .icon-sun{ display:none; }
+  html[data-theme="light"] .icon-moon{ display:block; }
+  .lang-btn{
+    width:auto; border-radius:999px; padding:0 14px;
+    font-family:'IBM Plex Mono'; font-size:0.76rem; font-weight:600; letter-spacing:0.03em;
+  }
+
+  .burger-btn{ position:relative; }
+  .burger-btn span{
+    position:absolute; left:50%; top:50%;
+    width:16px; height:2px; background:currentColor; border-radius:2px;
+    transform:translate(-50%,-50%) translateY(-4px);
+    transition: transform .25s ease, opacity .2s ease;
+  }
+  .burger-btn span:last-child{ transform:translate(-50%,-50%) translateY(4px); }
+  header.nav.menu-open .burger-btn span:first-child{ transform:translate(-50%,-50%) rotate(45deg); }
+  header.nav.menu-open .burger-btn span:last-child{ transform:translate(-50%,-50%) rotate(-45deg); }
+
+  /* ---------------- BACK TO TOP (shared) ---------------- */
+  .back-to-top{
+    position:fixed;
+    inset-inline-end:22px;
+    bottom:22px;
+    z-index:60;
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--gold-ink);
+    color:#1a1204;
+    border:none;
+    box-shadow: 0 14px 30px -10px rgba(0,0,0,0.5);
+    opacity:0; visibility:hidden; transform:translateY(14px) scale(0.9);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s, background .2s ease;
+  }
+  .back-to-top.show{
+    opacity:1; visibility:visible; transform:translateY(0) scale(1);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear 0s, background .2s ease;
+  }
+  .back-to-top:hover{ filter:brightness(1.08); }
+  .back-to-top svg{ width:20px; height:20px; }
+  @media (max-width:420px){
+    .back-to-top{ width:42px; height:42px; inset-inline-end:16px; bottom:16px; }
+  }
+
+  /* ---------------- SCANNER HERO ---------------- */
+  .scanner-hero{
+    position:relative;
+    padding:150px 24px 40px;
+    text-align:center;
+    overflow:hidden;
+  }
+  @media (max-width:420px){
+    .scanner-hero{ padding:126px 16px 30px; }
+    .nav-inner{ padding:12px 18px; }
+  }
+  .scanner-hero::before{
+    content:"";
+    position:absolute; inset:-20% -20% auto -20%; height:120%;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(201,161,92,0.10), transparent 45%),
+      radial-gradient(circle at 50% 20%, rgba(79,179,169,0.08), transparent 60%);
+    pointer-events:none;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    color:var(--gold-ink); font-size:0.78rem; letter-spacing:0.14em;
+    margin-bottom:18px; font-family:'IBM Plex Mono';
+  }
+  .eyebrow::before, .eyebrow::after{ content:""; width:24px; height:1px; background:var(--gold-ink); opacity:.6; }
+  .scanner-hero h1{
+    font-size:clamp(1.9rem, 4.6vw, 3rem);
+    font-weight:900;
+    line-height:1.25;
+    max-width:20ch; margin:0 auto;
+  }
+  .scanner-hero h1 span{ color:var(--gold-ink); }
+  .scanner-hero p.sub{
+    max-width:56ch; margin:18px auto 0; color:var(--text-dim); font-size:1rem;
+  }
+
+  /* ---------------- SCAN CARD ---------------- */
+  .scan-section{ padding:36px 0 90px; }
+  .scan-card{
+    max-width:760px; margin:0 auto;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(22px,4vw,36px);
+    box-shadow:var(--shadow-mockup);
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .scan-form{
+    display:flex; gap:12px; flex-wrap:wrap;
+  }
+  .scan-input-wrap{
+    flex:1 1 320px;
+    position:relative;
+    display:flex; align-items:center;
+  }
+  .scan-input-wrap svg{
+    position:absolute; inset-inline-start:16px;
+    width:18px; height:18px; color:var(--text-dim); pointer-events:none;
+  }
+  #url-input{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:12px;
+    padding:14px 16px 14px 46px;
+    font-family:'IBM Plex Mono';
+    font-size:0.9rem;
+    direction:ltr;
+    text-align:left;
+    transition: border-color .2s ease;
+  }
+  html[dir="rtl"] #url-input{ padding:14px 46px 14px 16px; }
+  #url-input:focus{ outline:none; border-color:var(--gold-ink); }
+  #url-input::placeholder{ color:var(--text-dim); opacity:0.7; }
+  .scan-btn{
+    flex:0 0 auto;
+    background:var(--gold-ink);
+    color:#1a1204;
+    border:none;
+    border-radius:12px;
+    padding:14px 26px;
+    font-weight:700;
+    font-size:0.95rem;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition: filter .2s ease, opacity .2s ease;
+    min-width:150px;
+  }
+  .scan-btn:hover{ filter:brightness(1.06); }
+  .scan-btn:disabled{ opacity:0.75; cursor:default; }
+  .scan-btn svg{ width:17px; height:17px; flex-shrink:0; }
+  .scan-note{
+    margin-top:14px; font-size:0.8rem; color:var(--text-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .scan-note svg{ width:15px;height:15px; flex-shrink:0; color:var(--gold-ink); }
+  .input-error{
+    margin-top:10px; font-size:0.82rem; color:var(--brick-ink);
+    display:none;
+  }
+  .input-error.show{ display:block; }
+
+  /* spinner */
+  .spinner{
+    width:16px; height:16px; border-radius:50%;
+    border:2px solid rgba(26,18,4,0.35);
+    border-top-color:#1a1204;
+    animation: spin 0.7s linear infinite;
+    display:none;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .scan-btn.loading .spinner{ display:inline-block; }
+  .scan-btn.loading .scan-btn-label{ display:none; }
+  .scan-btn.loading .scan-btn-icon{ display:none; }
+
+  .scan-progress{
+    display:none;
+    margin-top:26px;
+    text-align:center;
+  }
+  .scan-progress.show{ display:block; }
+  .scan-progress-ring{
+    width:64px; height:64px; margin:0 auto 14px;
+    border-radius:50%;
+    border:3px solid var(--line);
+    border-top-color:var(--gold-ink);
+    animation: spin 0.9s linear infinite;
+  }
+  .scan-progress p{
+    font-family:'IBM Plex Mono'; font-size:0.82rem; color:var(--text-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .spinner, .scan-progress-ring{ animation-duration: 1.4s; }
+  }
+
+  /* ---------------- RESULTS DASHBOARD ---------------- */
+  .scan-results{
+    display:none;
+    max-width:960px; margin:34px auto 0;
+  }
+  .scan-results.show{ display:block; }
+
+  .verdict-banner{
+    display:flex; flex-wrap:wrap; align-items:center; gap:26px;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(20px,3.4vw,30px);
+    box-shadow:var(--shadow-mockup);
+    margin-bottom:22px;
+    border-inline-start:5px solid var(--teal);
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .verdict-banner.is-safe{ border-inline-start-color:var(--teal); }
+  .verdict-banner.is-suspicious{ border-inline-start-color:var(--gold-ink); }
+  .verdict-banner.is-malicious{ border-inline-start-color:var(--brick-ink); }
+
+  .score-ring-wrap{ position:relative; width:104px; height:104px; flex-shrink:0; }
+  .score-ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .score-ring-bg{ fill:none; stroke:var(--line); stroke-width:9; }
+  .score-ring-fg{ fill:none; stroke-width:9; stroke-linecap:round; transition: stroke-dashoffset 1s ease, stroke .3s ease; }
+  .score-ring-num{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .score-ring-num b{ font-family:'Cairo'; font-size:1.5rem; line-height:1; }
+  .score-ring-num span{ font-family:'IBM Plex Mono'; font-size:0.62rem; color:var(--text-dim); margin-top:2px; }
+
+  .verdict-info{ flex:1 1 260px; min-width:0; }
+  .verdict-badge{
+    display:inline-flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono'; font-size:0.72rem; font-weight:600; letter-spacing:0.04em;
+    padding:5px 13px; border-radius:999px; margin-bottom:10px;
+  }
+  .is-safe .verdict-badge{ background:var(--teal-soft); color:var(--teal); }
+  .is-suspicious .verdict-badge{ background:var(--gold-soft); color:var(--gold-ink); }
+  .is-malicious .verdict-badge{ background:var(--brick-soft); color:var(--brick-ink); }
+  .verdict-badge .dot{ width:7px;height:7px;border-radius:50%; background:currentColor; }
+  .verdict-info h2{ font-size:clamp(1.15rem,2.2vw,1.5rem); font-weight:800; margin-bottom:6px; word-break:break-all; }
+  .verdict-info p{ color:var(--text-dim); font-size:0.88rem; margin:0; }
+  .verdict-meta{
+    margin-top:12px; display:flex; flex-wrap:wrap; gap:14px;
+    font-family:'IBM Plex Mono'; font-size:0.74rem; color:var(--text-dim);
+  }
+  .verdict-meta b{ color:var(--text); font-weight:600; }
+
+  .result-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    margin-bottom:22px;
+  }
+  @media (max-width:760px){ .result-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:480px){ .result-grid{ grid-template-columns:1fr; } }
+
+  .result-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px;
+    display:flex; flex-direction:column; gap:8px;
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .result-card .rc-head{ display:flex; align-items:center; gap:10px; }
+  .result-card .rc-icon{
+    width:34px;height:34px;border-radius:10px;
+    background:var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold-ink); flex-shrink:0;
+  }
+  .result-card .rc-icon svg{ width:17px;height:17px; }
+  .result-card .rc-title{ font-size:0.82rem; color:var(--text-dim); }
+  .result-card .rc-value{ font-family:'Cairo'; font-weight:800; font-size:1.05rem; }
+  .result-card.status-good .rc-value{ color:var(--teal); }
+  .result-card.status-warn .rc-value{ color:var(--gold-ink); }
+  .result-card.status-bad .rc-value{ color:var(--brick-ink); }
+
+  .panel-block{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:clamp(18px,3vw,26px); margin-bottom:18px;
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .panel-block h3{
+    font-size:1rem; font-weight:800; margin-bottom:16px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .panel-block h3 svg{ width:18px;height:18px; color:var(--gold-ink); }
+
+  .engine-table{ width:100%; border-collapse:collapse; }
+  .engine-table th{
+    text-align:start; font-family:'IBM Plex Mono'; font-size:0.68rem; letter-spacing:.06em;
+    color:var(--text-dim); font-weight:600; padding:0 0 10px; border-bottom:1px solid var(--line);
+  }
+  .engine-table td{
+    padding:11px 0; border-bottom:1px solid var(--line); font-size:0.88rem;
+  }
+  .engine-table tr:last-child td{ border-bottom:none; }
+  .engine-status{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono'; font-size:0.72rem; font-weight:600;
+    padding:3px 10px; border-radius:999px;
+  }
+  .engine-status.clean{ background:var(--teal-soft); color:var(--teal); }
+  .engine-status.flagged{ background:var(--brick-soft); color:var(--brick-ink); }
+  .engine-status .dot{ width:6px;height:6px;border-radius:50%; background:currentColor; }
+
+  .info-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:14px 28px;
+  }
+  @media (max-width:600px){ .info-grid{ grid-template-columns:1fr; } }
+  .info-row{ display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:0.88rem; }
+  .info-row span:first-child{ color:var(--text-dim); }
+  .info-row span:last-child{ font-family:'IBM Plex Mono'; font-size:0.82rem; text-align:end; }
+
+  .redirect-chain{ display:flex; flex-direction:column; gap:0; }
+  .redirect-step{
+    display:flex; align-items:center; gap:12px; padding:10px 0;
+  }
+  .redirect-step .rs-num{
+    width:24px;height:24px;border-radius:50%; background:var(--panel-2); border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Mono'; font-size:0.68rem; color:var(--gold-ink); flex-shrink:0;
+  }
+  .redirect-step span:last-child{ font-family:'IBM Plex Mono'; font-size:0.82rem; word-break:break-all; }
+  .redirect-step:not(:last-child){ border-bottom:1px dashed var(--line); }
+
+  .recommendation{
+    border:1px dashed var(--gold-ink);
+    background:var(--gold-soft);
+    border-radius:14px; padding:16px 18px;
+    font-size:0.9rem; color:var(--text);
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .recommendation.is-malicious{ border-color:var(--brick-ink); background:var(--brick-soft); }
+  .recommendation.is-suspicious{ border-color:var(--gold-ink); background:var(--gold-soft); }
+  .recommendation.is-safe{ border-color:var(--teal); background:var(--teal-soft); }
+  .recommendation svg{ width:19px;height:19px; flex-shrink:0; margin-top:2px; }
+  .recommendation b{ font-family:'Cairo'; }
+
+  .scan-again{
+    display:flex; justify-content:center; margin-top:8px;
+  }
+  .scan-again button{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    border-radius:999px; padding:10px 22px; font-size:0.85rem; display:flex; align-items:center; gap:8px;
+    transition: border-color .2s, color .2s;
+  }
+  .scan-again button:hover{ border-color:var(--gold-ink); color:var(--gold-ink); }
+  .scan-again button svg{ width:15px;height:15px; }
+
+  .mock-banner{
+    display:flex; align-items:center; gap:10px;
+    font-size:0.78rem; color:var(--text-dim);
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:999px; padding:8px 16px; margin:0 auto 26px;
+    max-width:fit-content;
+  }
+  .mock-banner svg{ width:15px;height:15px; color:var(--gold-ink); flex-shrink:0; }
+
+  footer{ padding:60px 0 40px; border-top:1px solid var(--line); }
+  footer .wrap{ display:flex; flex-direction:column; gap:16px; text-align:center; align-items:center; }
+  footer p{ color:var(--text-dim); font-size:0.85rem; max-width:56ch; }
+  footer .brand{ opacity:0.8; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .reveal{ opacity:1; transform:none; transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="brand-mark"></span> <span data-i18n="brand.name">Nostalgia</span></div>
+    <nav class="nav-links" id="nav-links-menu">
+      <a href="index.html#top" data-i18n="nav.home">الرئيسية</a>
+      <a href="index.html#layer-1" data-i18n="nav.awareness">الوعي والحذر</a>
+      <a href="index.html#layer-2" data-i18n="nav.network">أمان الشبكة</a>
+      <a href="index.html#layer-3" data-i18n="nav.account">حماية الحساب</a>
+      <a href="index.html#layer-4" data-i18n="nav.device">تأمين الجهاز</a>
+      <a href="index.html#layer-5" data-i18n="nav.backup">النسخ الاحتياطي</a>
+      <a href="index.html#checklist" data-i18n="nav.checklist">القائمة السريعة</a>
+      <a href="url-scanner.html" data-i18n="nav.scanner" aria-current="page">فحص الروابط</a>
+    </nav>
+    <div class="nav-controls">
+      <button id="theme-toggle" class="ctrl-btn" type="button" aria-label="تبديل الوضع الليلي والنهاري">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="lang-toggle" class="ctrl-btn lang-btn mono" type="button" aria-label="Switch language">EN</button>
+      <button id="burger-toggle" class="ctrl-btn burger-btn" type="button" aria-label="فتح القائمة" aria-expanded="false" aria-controls="nav-links-menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="scanner-hero" id="top">
+  <div class="eyebrow mono" data-i18n="hero.eyebrow">أداة تفاعلية · فحص فوري</div>
+  <h1 data-i18n="hero.title">افحص أي رابط<br>قبل ما <span>تضغط</span> عليه</h1>
+  <p class="sub" data-i18n="hero.sub">الصق الرابط اللي مش متأكد منه، وهنطلعلك تقرير سريع بيوضح مستوى الخطورة، والمشاكل المحتملة، قبل ما تفتحه.</p>
+</section>
+
+<section class="scan-section">
+  <div class="wrap">
+    <div class="mock-banner">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 16.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.3 3.9 2.5 17.5a1.6 1.6 0 0 0 1.4 2.4h16.2a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span data-i18n="mock.banner">أداة تجريبية بواجهة عرض فقط — النتائج بيانات وهمية ولا يوجد أي فحص فعلي أو اتصال بخوادم خارجية.</span>
+    </div>
+
+    <div class="scan-card reveal">
+      <form class="scan-form" id="scan-form">
+        <div class="scan-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 12a3.5 3.5 0 0 0 3.5 3.5h4A3.5 3.5 0 0 0 19.5 12v0A3.5 3.5 0 0 0 16 8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15.5 12A3.5 3.5 0 0 0 12 8.5H8A3.5 3.5 0 0 0 4.5 12v0A3.5 3.5 0 0 0 8 15.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input type="text" id="url-input" data-i18n-attr="placeholder:form.placeholder" placeholder="https://example.com" autocomplete="off" spellcheck="false" inputmode="url">
+        </div>
+        <button type="submit" class="scan-btn" id="scan-btn">
+          <svg class="scan-btn-icon" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="spinner"></span>
+          <span class="scan-btn-label" data-i18n="form.button">افحص الرابط</span>
+        </button>
+      </form>
+      <p class="input-error" id="input-error" data-i18n="form.error">من فضلك اكتب رابط صحيح للفحص.</p>
+      <p class="scan-note">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span data-i18n="form.note">مفيش أي بيانات بتتخزن أو تتبعت لأي جهة — الفحص كله بيحصل في المتصفح بتاعك.</span>
+      </p>
+
+      <div class="scan-progress" id="scan-progress">
+        <div class="scan-progress-ring"></div>
+        <p data-i18n="progress.text">جاري تحليل الرابط والتحقق من مصادر متعددة…</p>
+      </div>
+    </div>
+
+    <div class="scan-results" id="scan-results">
+
+      <div class="verdict-banner is-safe" id="verdict-banner">
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 120 120">
+            <circle class="score-ring-bg" cx="60" cy="60" r="50"></circle>
+            <circle class="score-ring-fg" id="score-ring-fg" cx="60" cy="60" r="50"></circle>
+          </svg>
+          <div class="score-ring-num">
+            <b id="score-num">92</b>
+            <span data-i18n="verdict.scoreLabel">/ 100</span>
+          </div>
+        </div>
+        <div class="verdict-info">
+          <div class="verdict-badge" id="verdict-badge"><span class="dot"></span><span id="verdict-badge-text" data-i18n="verdict.safe">آمن على الأرجح</span></div>
+          <h2 id="scanned-url">example.com</h2>
+          <p id="verdict-desc" data-i18n="verdict.safeDesc">معظم المؤشرات طلعت سليمة، ومفيش علامات احتيال واضحة في الرابط ده.</p>
+          <div class="verdict-meta">
+            <span data-i18n="verdict.scannedAt">وقت الفحص:</span> <b id="scan-time" class="mono">—</b>
+            <span data-i18n="verdict.scanId">رقم الفحص:</span> <b id="scan-id" class="mono">—</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card" id="rc-ssl">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
+            <div class="rc-title" data-i18n="card.ssl">شهادة SSL</div>
+          </div>
+          <div class="rc-value" id="rc-ssl-value">—</div>
+        </div>
+        <div class="result-card" id="rc-malware">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+            <div class="rc-title" data-i18n="card.malware">فحص البرمجيات الخبيثة</div>
+          </div>
+          <div class="rc-value" id="rc-malware-value">—</div>
+        </div>
+        <div class="result-card" id="rc-phishing">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 16.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg></div>
+            <div class="rc-title" data-i18n="card.phishing">مؤشرات تصيّد</div>
+          </div>
+          <div class="rc-value" id="rc-phishing-value">—</div>
+        </div>
+        <div class="result-card" id="rc-blacklist">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h6M9 8h1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/></svg></div>
+            <div class="rc-title" data-i18n="card.blacklist">قوائم الحظر</div>
+          </div>
+          <div class="rc-value" id="rc-blacklist-value">—</div>
+        </div>
+        <div class="result-card" id="rc-age">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div class="rc-title" data-i18n="card.age">عمر النطاق</div>
+          </div>
+          <div class="rc-value" id="rc-age-value">—</div>
+        </div>
+        <div class="result-card" id="rc-redirects">
+          <div class="rc-head">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h13M13 7l4 5-4 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="rc-title" data-i18n="card.redirects">عدد التحويلات</div>
+          </div>
+          <div class="rc-value" id="rc-redirects-value">—</div>
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="panel.engines">نتائج محركات الفحص</span></h3>
+        <table class="engine-table">
+          <thead>
+            <tr>
+              <th data-i18n="table.engine">المحرك</th>
+              <th data-i18n="table.status">الحالة</th>
+              <th data-i18n="table.category">التصنيف</th>
+            </tr>
+          </thead>
+          <tbody id="engine-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel-block">
+        <h3><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h13M13 7l4 5-4 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="panel.redirects">سلسلة التحويلات</span></h3>
+        <div class="redirect-chain" id="redirect-chain"></div>
+      </div>
+
+      <div class="panel-block">
+        <h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M8 4v16" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="panel.domain">معلومات النطاق</span></h3>
+        <div class="info-grid">
+          <div class="info-row"><span data-i18n="info.registrar">جهة التسجيل</span><span id="info-registrar">—</span></div>
+          <div class="info-row"><span data-i18n="info.created">تاريخ الإنشاء</span><span id="info-created">—</span></div>
+          <div class="info-row"><span data-i18n="info.country">بلد الاستضافة</span><span id="info-country">—</span></div>
+          <div class="info-row"><span data-i18n="info.ip">عنوان IP</span><span id="info-ip">—</span></div>
+          <div class="info-row"><span data-i18n="info.host">مزود الاستضافة</span><span id="info-host">—</span></div>
+          <div class="info-row"><span data-i18n="info.reputation">درجة السمعة</span><span id="info-reputation">—</span></div>
+        </div>
+      </div>
+
+      <div class="recommendation is-safe" id="recommendation" style="margin-bottom:22px;">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="recommendation-text" data-i18n="rec.safe"><b data-i18n="rec.safeLabel">التوصية:</b> الرابط ده منخفض الخطورة حسب الفحص، بس خلي بالك دايمًا من أي طلب لبيانات حساسة حتى لو الموقع شكله موثوق.</span>
+      </div>
+
+      <div class="scan-again">
+        <button type="button" id="scan-again-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n="form.again">افحص رابط تاني</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark"></span> <span data-i18n="brand.name">Nostalgia</span></div>
+    <p data-i18n="footer.text">أداة الفحص دي تجريبية للتوضيح فقط، وبتستخدم بيانات وهمية لغرض العرض — مفيش فحص حقيقي أو اتصال بأي خدمة خارجية. لأي رابط بتشك فيه فعليًا، استخدم أداة فحص روابط موثوقة أو استشير متخصص أمن سيبراني.</p>
+  </div>
+</footer>
+
+<button id="back-to-top" class="back-to-top" type="button" aria-label="الرجوع لأعلى الصفحة">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<script>
+(function(){
+  const I18N = {
+    'page.title': { ar:`فحص الروابط — خط دفاعك الرقمي`, en:`URL Scanner — Your Digital Defense Line` },
+    'brand.name': { ar:`Nostalgia`, en:`Nostalgia` },
+    'nav.home': { ar:`الرئيسية`, en:`Home` },
+    'nav.awareness': { ar:`الوعي والحذر`, en:`Awareness` },
+    'nav.network': { ar:`أمان الشبكة`, en:`Network` },
+    'nav.account': { ar:`حماية الحساب`, en:`Account` },
+    'nav.device': { ar:`تأمين الجهاز`, en:`Device` },
+    'nav.backup': { ar:`النسخ الاحتياطي`, en:`Backups` },
+    'nav.checklist': { ar:`القائمة السريعة`, en:`Checklist` },
+    'nav.scanner': { ar:`فحص الروابط`, en:`URL Scanner` },
+
+    'hero.eyebrow': { ar:`أداة تفاعلية · فحص فوري`, en:`Interactive Tool · Instant Scan` },
+    'hero.title': { ar:`افحص أي رابط<br>قبل ما <span>تضغط</span> عليه`, en:`Check Any Link<br>Before You <span>Click</span>` },
+    'hero.sub': { ar:`الصق الرابط اللي مش متأكد منه، وهنطلعلك تقرير سريع بيوضح مستوى الخطورة، والمشاكل المحتملة، قبل ما تفتحه.`, en:`Paste a link you're unsure about and get a quick report showing its risk level and potential issues before you open it.` },
+
+    'mock.banner': { ar:`أداة تجريبية بواجهة عرض فقط — النتائج بيانات وهمية ولا يوجد أي فحص فعلي أو اتصال بخوادم خارجية.`, en:`Demo tool for illustration only — results are mock data, with no real scanning or connection to external servers.` },
+
+    'form.placeholder': { ar:`https://example.com`, en:`https://example.com` },
+    'form.button': { ar:`افحص الرابط`, en:`Scan URL` },
+    'form.error': { ar:`من فضلك اكتب رابط صحيح للفحص.`, en:`Please enter a valid URL to scan.` },
+    'form.note': { ar:`مفيش أي بيانات بتتخزن أو تتبعت لأي جهة — الفحص كله بيحصل في المتصفح بتاعك.`, en:`Nothing is stored or sent anywhere — the whole "scan" happens locally in your browser.` },
+    'form.again': { ar:`افحص رابط تاني`, en:`Scan another URL` },
+    'progress.text': { ar:`جاري تحليل الرابط والتحقق من مصادر متعددة…`, en:`Analyzing the link and checking multiple sources…` },
+
+    'verdict.scoreLabel': { ar:`/ 100`, en:`/ 100` },
+    'verdict.scannedAt': { ar:`وقت الفحص:`, en:`Scanned at:` },
+    'verdict.scanId': { ar:`رقم الفحص:`, en:`Scan ID:` },
+    'verdict.safe': { ar:`آمن على الأرجح`, en:`Likely Safe` },
+    'verdict.suspicious': { ar:`يحتاج حذر`, en:`Needs Caution` },
+    'verdict.malicious': { ar:`خطر مرتفع`, en:`High Risk` },
+    'verdict.safeDesc': { ar:`معظم المؤشرات طلعت سليمة، ومفيش علامات احتيال واضحة في الرابط ده.`, en:`Most indicators came back clean, with no clear signs of fraud on this link.` },
+    'verdict.suspiciousDesc': { ar:`في بعض المؤشرات المشبوهة اللي بتستاهل حذر إضافي قبل ما تتفاعل مع الرابط ده.`, en:`Several indicators look suspicious and warrant extra caution before interacting with this link.` },
+    'verdict.maliciousDesc': { ar:`الرابط ده ظهرت عليه علامات خطر واضحة — يُفضّل تتجنبه تمامًا.`, en:`This link shows clear danger signals — it's best to avoid it entirely.` },
+
+    'card.ssl': { ar:`شهادة SSL`, en:`SSL Certificate` },
+    'card.malware': { ar:`فحص البرمجيات الخبيثة`, en:`Malware Scan` },
+    'card.phishing': { ar:`مؤشرات تصيّد`, en:`Phishing Indicators` },
+    'card.blacklist': { ar:`قوائم الحظر`, en:`Blacklist Check` },
+    'card.age': { ar:`عمر النطاق`, en:`Domain Age` },
+    'card.redirects': { ar:`عدد التحويلات`, en:`Redirects` },
+
+    'status.valid': { ar:`صالحة`, en:`Valid` },
+    'status.invalid': { ar:`غير صالحة`, en:`Invalid` },
+    'status.clean': { ar:`نظيف`, en:`Clean` },
+    'status.detected': { ar:`تم رصد خطر`, en:`Threat Detected` },
+    'status.none': { ar:`لا يوجد`, en:`None Found` },
+    'status.found': { ar:`تم العثور عليها`, en:`Indicators Found` },
+    'status.yearsAr': { ar:`سنوات`, en:`years` },
+    'status.yearAr': { ar:`سنة`, en:`year` },
+
+    'panel.engines': { ar:`نتائج محركات الفحص`, en:`Scan Engine Results` },
+    'panel.redirects': { ar:`سلسلة التحويلات`, en:`Redirect Chain` },
+    'panel.domain': { ar:`معلومات النطاق`, en:`Domain Information` },
+
+    'table.engine': { ar:`المحرك`, en:`Engine` },
+    'table.status': { ar:`الحالة`, en:`Status` },
+    'table.category': { ar:`التصنيف`, en:`Category` },
+    'engine.clean': { ar:`نظيف`, en:`Clean` },
+    'engine.flagged': { ar:`مُبلّغ عنه`, en:`Flagged` },
+    'engine.catNone': { ar:`—`, en:`—` },
+    'engine.catPhishing': { ar:`تصيّد احتيالي`, en:`Phishing` },
+    'engine.catMalware': { ar:`برمجية خبيثة`, en:`Malware` },
+    'engine.catSuspicious': { ar:`نشاط مشبوه`, en:`Suspicious Activity` },
+
+    'info.registrar': { ar:`جهة التسجيل`, en:`Registrar` },
+    'info.created': { ar:`تاريخ الإنشاء`, en:`Created On` },
+    'info.country': { ar:`بلد الاستضافة`, en:`Hosting Country` },
+    'info.ip': { ar:`عنوان IP`, en:`IP Address` },
+    'info.host': { ar:`مزود الاستضافة`, en:`Hosting Provider` },
+    'info.reputation': { ar:`درجة السمعة`, en:`Reputation Score` },
+
+    'rec.safeLabel': { ar:`التوصية:`, en:`Recommendation:` },
+    'rec.safe': { ar:`الرابط ده منخفض الخطورة حسب الفحص، بس خلي بالك دايمًا من أي طلب لبيانات حساسة حتى لو الموقع شكله موثوق.`, en:`This link appears low-risk, but always stay alert to requests for sensitive data even on sites that look trustworthy.` },
+    'rec.suspicious': { ar:`ننصحك متدخلش بيانات حساسة على الرابط ده، وتتحقق من مصدره قبل أي تفاعل.`, en:`We recommend not entering sensitive data on this link, and verifying its source before interacting further.` },
+    'rec.malicious': { ar:`متفتحش الرابط ده ولا تدخل عليه أي بيانات. لو ضغطت عليه بالغلط، غيّر كلمات السر المهمة فورًا.`, en:`Don't open this link or enter any data into it. If you already clicked it, change your important passwords immediately.` },
+
+    'theme.toLight': { ar:`تفعيل الوضع النهاري`, en:`Switch to light mode` },
+    'theme.toDark': { ar:`تفعيل الوضع الليلي`, en:`Switch to dark mode` },
+    'menu.open': { ar:`فتح القائمة`, en:`Open menu` },
+    'menu.close': { ar:`إغلاق القائمة`, en:`Close menu` },
+    'backtotop.label': { ar:`الرجوع لأعلى الصفحة`, en:`Back to top` },
+
+    'footer.text': { ar:`أداة الفحص دي تجريبية للتوضيح فقط، وبتستخدم بيانات وهمية لغرض العرض — مفيش فحص حقيقي أو اتصال بأي خدمة خارجية. لأي رابط بتشك فيه فعليًا، استخدم أداة فحص روابط موثوقة أو استشير متخصص أمن سيبراني.`, en:`This scanning tool is a demo for illustration only and uses mock data — there is no real scanning or connection to any external service. For links you're genuinely concerned about, use a trusted URL scanner or consult a cybersecurity professional.` }
+  };
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const langBtn = document.getElementById('lang-toggle');
+  const backToTopBtn = document.getElementById('back-to-top');
+
+  function t(lang, key){
+    const entry = I18N[key];
+    return entry ? entry[lang] : null;
+  }
+
+  function applyTheme(theme){
+    root.setAttribute('data-theme', theme);
+    const lang = root.getAttribute('lang') || 'ar';
+    themeBtn.setAttribute('aria-label', t(lang, theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
+  }
+
+  function applyLang(lang){
+    root.setAttribute('lang', lang);
+    root.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    document.title = t(lang, 'page.title');
+    langBtn.textContent = lang === 'ar' ? 'EN' : 'AR';
+
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      const val = t(lang, el.getAttribute('data-i18n'));
+      if(val != null) el.innerHTML = val;
+    });
+    document.querySelectorAll('[data-i18n-attr]').forEach(function(el){
+      const spec = el.getAttribute('data-i18n-attr').split(':');
+      const val = t(lang, spec[1]);
+      if(val != null) el.setAttribute(spec[0], val);
+    });
+
+    const theme = root.getAttribute('data-theme') || 'dark';
+    themeBtn.setAttribute('aria-label', t(lang, theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
+    if(backToTopBtn){ backToTopBtn.setAttribute('aria-label', t(lang, 'backtotop.label')); }
+
+    const burgerBtnEl = document.getElementById('burger-toggle');
+    if(burgerBtnEl){
+      const isOpen = document.querySelector('header.nav').classList.contains('menu-open');
+      burgerBtnEl.setAttribute('aria-label', t(lang, isOpen ? 'menu.close' : 'menu.open'));
+    }
+
+    if(window.__lastScan){ renderResults(window.__lastScan, lang); }
+  }
+
+  const savedTheme = localStorage.getItem('df-theme') || 'dark';
+  const savedLang = localStorage.getItem('df-lang') || 'ar';
+  applyTheme(savedTheme);
+  applyLang(savedLang);
+
+  themeBtn.addEventListener('click', function(){
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('df-theme', next);
+  });
+  langBtn.addEventListener('click', function(){
+    const next = root.getAttribute('lang') === 'ar' ? 'en' : 'ar';
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(prefersReducedMotion){
+      applyLang(next);
+      localStorage.setItem('df-lang', next);
+      return;
+    }
+    document.body.style.transition = 'opacity .22s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function(){
+      applyLang(next);
+      localStorage.setItem('df-lang', next);
+      document.body.style.opacity = '1';
+    }, 220);
+  });
+
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  /* ---- Back to top ---- */
+  function updateBackToTop(){
+    if(window.scrollY > 480){ backToTopBtn.classList.add('show'); }
+    else{ backToTopBtn.classList.remove('show'); }
+  }
+  window.addEventListener('scroll', updateBackToTop, { passive:true });
+  updateBackToTop();
+  backToTopBtn.addEventListener('click', function(){
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  });
+
+  /* ---- Mobile burger menu ---- */
+  const headerEl = document.querySelector('header.nav');
+  const burgerBtn = document.getElementById('burger-toggle');
+  const navLinksMenu = document.getElementById('nav-links-menu');
+  function currentLang(){ return root.getAttribute('lang') || 'ar'; }
+  function closeMenu(){
+    headerEl.classList.remove('menu-open');
+    burgerBtn.setAttribute('aria-expanded', 'false');
+    burgerBtn.setAttribute('aria-label', t(currentLang(), 'menu.open'));
+  }
+  function toggleMenu(){
+    const isOpen = headerEl.classList.toggle('menu-open');
+    burgerBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    burgerBtn.setAttribute('aria-label', t(currentLang(), isOpen ? 'menu.close' : 'menu.open'));
+  }
+  burgerBtn.addEventListener('click', toggleMenu);
+  navLinksMenu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
+  window.addEventListener('resize', function(){ if(window.innerWidth > 820) closeMenu(); });
+
+  /* =====================================================================
+     MOCK URL SCANNER — no backend / no network calls.
+     Everything below generates deterministic-looking fake results purely
+     from the text of the URL, entirely client-side, for demo purposes.
+     ===================================================================== */
+
+  const form = document.getElementById('scan-form');
+  const urlInput = document.getElementById('url-input');
+  const scanBtn = document.getElementById('scan-btn');
+  const inputError = document.getElementById('input-error');
+  const scanProgress = document.getElementById('scan-progress');
+  const scanResults = document.getElementById('scan-results');
+  const scanAgainBtn = document.getElementById('scan-again-btn');
+
+  const MOCK_ENGINES = [
+    'SafeBrowse Shield','DefenderNet','GuardianAV','ThreatWatch','CyberNet Pro',
+    'SentryScan','TrustGrid','PhishBlock'
+  ];
+  const MOCK_REGISTRARS = ['NetName Registry','GlobalDomains LLC','SecureReg Inc.','DomainCore Ltd.'];
+  const MOCK_COUNTRIES_AR = ['الولايات المتحدة','ألمانيا','هولندا','أيرلندا','سنغافورة','فرنسا'];
+  const MOCK_COUNTRIES_EN = ['United States','Germany','Netherlands','Ireland','Singapore','France'];
+  const MOCK_HOSTS = ['CloudEdge Hosting','NimbusServe','FastRoute CDN','ByteHarbor Cloud'];
+
+  function hashStr(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+
+  function isLikelyUrl(value){
+    const v = value.trim();
+    if(!v) return false;
+    // Accept with or without protocol, just needs a dot and no spaces.
+    return /^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+([\/?#].*)?$/i.test(v);
+  }
+
+  function normalizeUrl(value){
+    let v = value.trim();
+    if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    return v;
+  }
+
+  function buildMockScan(rawUrl){
+    const url = normalizeUrl(rawUrl);
+    let hostname;
+    try{ hostname = new URL(url).hostname; } catch(e){ hostname = rawUrl.trim(); }
+    const h = hashStr(hostname);
+
+    const score = h % 101; // 0-100
+    let verdict;
+    if(score >= 75) verdict = 'safe';
+    else if(score >= 45) verdict = 'suspicious';
+    else verdict = 'malicious';
+
+    const sslValid = verdict !== 'malicious' ? (h % 5 !== 0) : (h % 3 === 0);
+    const malwareDetected = verdict === 'malicious' && (h % 2 === 0);
+    const phishingFound = verdict !== 'safe' && (h % 3 !== 1);
+
+    const totalEngines = MOCK_ENGINES.length;
+    let flaggedCount;
+    if(verdict === 'safe') flaggedCount = (h % 2 === 0) ? 0 : 1;
+    else if(verdict === 'suspicious') flaggedCount = 1 + (h % 2);
+    else flaggedCount = 3 + (h % 4);
+    flaggedCount = Math.min(flaggedCount, totalEngines);
+
+    const flaggedIdx = new Set();
+    let seed = h;
+    while(flaggedIdx.size < flaggedCount){
+      seed = (seed * 1103515245 + 12345) >>> 0;
+      flaggedIdx.add(seed % totalEngines);
+    }
+    const engines = MOCK_ENGINES.map(function(name, i){
+      return { name: name, flagged: flaggedIdx.has(i) };
+    });
+
+    const domainAgeYears = 1 + (h % 12);
+    const redirectCount = h % 4; // 0-3
+    const redirects = [hostname];
+    let seed2 = h;
+    for(let i=0;i<redirectCount;i++){
+      seed2 = (seed2 * 48271) % 2147483647;
+      const suffixes = ['track','go','r','link'];
+      redirects.push(suffixes[seed2 % suffixes.length] + (seed2 % 900) + '.' + ['io','co','net'][seed2 % 3]);
+    }
+    redirects.push(hostname);
+
+    const createdYear = 2026 - domainAgeYears;
+    const registrar = MOCK_REGISTRARS[h % MOCK_REGISTRARS.length];
+    const countryIdx = h % MOCK_COUNTRIES_AR.length;
+    const host = MOCK_HOSTS[h % MOCK_HOSTS.length];
+    const ip = [ (h % 223) + 1, (h >> 3) % 256, (h >> 7) % 256, (h >> 11) % 256 ].join('.');
+    const reputation = score;
+
+    return {
+      rawUrl: rawUrl.trim(),
+      hostname: hostname,
+      score: score,
+      verdict: verdict,
+      sslValid: sslValid,
+      malwareDetected: malwareDetected,
+      phishingFound: phishingFound,
+      engines: engines,
+      flaggedCount: flaggedCount,
+      totalEngines: totalEngines,
+      domainAgeYears: domainAgeYears,
+      createdYear: createdYear,
+      redirects: redirects,
+      redirectCount: redirectCount,
+      registrar: registrar,
+      countryIdx: countryIdx,
+      host: host,
+      ip: ip,
+      reputation: reputation,
+      scannedAt: new Date(),
+      scanId: 'SCN-' + (h % 900000 + 100000)
+    };
+  }
+
+  function circumference(r){ return 2 * Math.PI * r; }
+
+  function renderResults(data, lang){
+    lang = lang || currentLang();
+    window.__lastScan = data;
+
+    const banner = document.getElementById('verdict-banner');
+    banner.className = 'verdict-banner is-' + data.verdict;
+
+    const scoreRing = document.getElementById('score-ring-fg');
+    const r = 50, c = circumference(r);
+    scoreRing.setAttribute('stroke-dasharray', c);
+    scoreRing.style.strokeDashoffset = c * (1 - data.score/100);
+    const ringColor = data.verdict === 'safe' ? getComputedStyle(root).getPropertyValue('--teal')
+                      : data.verdict === 'suspicious' ? getComputedStyle(root).getPropertyValue('--gold-ink')
+                      : getComputedStyle(root).getPropertyValue('--brick-ink');
+    scoreRing.style.stroke = ringColor.trim();
+
+    document.getElementById('score-num').textContent = data.score;
+    document.getElementById('verdict-badge-text').textContent = t(lang, 'verdict.' + data.verdict);
+    document.getElementById('scanned-url').textContent = data.hostname;
+    document.getElementById('verdict-desc').textContent = t(lang, 'verdict.' + data.verdict + 'Desc');
+    document.getElementById('scan-time').textContent = data.scannedAt.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US');
+    document.getElementById('scan-id').textContent = data.scanId;
+
+    function setCard(id, statusClass, valueText){
+      const el = document.getElementById(id);
+      el.className = 'result-card status-' + statusClass;
+      document.getElementById(id + '-value').textContent = valueText;
+    }
+    setCard('rc-ssl', data.sslValid ? 'good' : 'bad', t(lang, data.sslValid ? 'status.valid' : 'status.invalid'));
+    setCard('rc-malware', data.malwareDetected ? 'bad' : 'good', t(lang, data.malwareDetected ? 'status.detected' : 'status.clean'));
+    setCard('rc-phishing', data.phishingFound ? 'warn' : 'good', t(lang, data.phishingFound ? 'status.found' : 'status.none'));
+    setCard('rc-blacklist', data.flaggedCount === 0 ? 'good' : (data.flaggedCount <= 2 ? 'warn' : 'bad'), data.flaggedCount + ' / ' + data.totalEngines);
+    const ageUnit = lang === 'ar' ? (data.domainAgeYears === 1 ? t(lang,'status.yearAr') : t(lang,'status.yearsAr')) : (data.domainAgeYears === 1 ? 'year' : 'years');
+    setCard('rc-age', data.domainAgeYears < 1 ? 'warn' : (data.domainAgeYears < 2 ? 'warn' : 'good'), data.domainAgeYears + ' ' + ageUnit);
+    setCard('rc-redirects', data.redirectCount === 0 ? 'good' : (data.redirectCount <= 1 ? 'warn' : 'bad'), String(data.redirectCount));
+
+    const tbody = document.getElementById('engine-table-body');
+    tbody.innerHTML = '';
+    data.engines.forEach(function(eng){
+      const tr = document.createElement('tr');
+      const category = !eng.flagged ? t(lang,'engine.catNone')
+        : (data.malwareDetected ? t(lang,'engine.catMalware') : (data.phishingFound ? t(lang,'engine.catPhishing') : t(lang,'engine.catSuspicious')));
+      tr.innerHTML =
+        '<td>' + eng.name + '</td>' +
+        '<td><span class="engine-status ' + (eng.flagged ? 'flagged' : 'clean') + '"><span class="dot"></span>' + t(lang, eng.flagged ? 'engine.flagged' : 'engine.clean') + '</span></td>' +
+        '<td>' + category + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    const chain = document.getElementById('redirect-chain');
+    chain.innerHTML = '';
+    data.redirects.forEach(function(step, i){
+      const div = document.createElement('div');
+      div.className = 'redirect-step';
+      div.innerHTML = '<span class="rs-num">' + (i+1) + '</span><span>' + step + '</span>';
+      chain.appendChild(div);
+    });
+
+    document.getElementById('info-registrar').textContent = data.registrar;
+    document.getElementById('info-created').textContent = data.createdYear;
+    document.getElementById('info-country').textContent = (lang === 'ar' ? MOCK_COUNTRIES_AR : MOCK_COUNTRIES_EN)[data.countryIdx];
+    document.getElementById('info-ip').textContent = data.ip;
+    document.getElementById('info-host').textContent = data.host;
+    document.getElementById('info-reputation').textContent = data.reputation + ' / 100';
+
+    const rec = document.getElementById('recommendation');
+    rec.className = 'recommendation is-' + data.verdict;
+    document.getElementById('recommendation-text').innerHTML =
+      '<b>' + t(lang, 'rec.safeLabel') + '</b> ' + t(lang, 'rec.' + data.verdict);
+  }
+
+  function showError(show){
+    inputError.classList.toggle('show', show);
+    urlInput.style.borderColor = show ? getComputedStyle(root).getPropertyValue('--brick-ink').trim() : '';
+  }
+
+  async function runScan(rawUrl) {
+  scanBtn.disabled = true;
+  scanBtn.classList.add("loading");
+  scanProgress.classList.add("show");
+  scanResults.classList.remove("show");
+
+  try {
+    const response = await fetch ("http://localhost:5000/api/check-link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: rawUrl
+      })
+    });
+
+   const data = await response.json();
+   const tbody = document.getElementById("engine-table-body");
+
+tbody.innerHTML = "";
+
+data.engines.forEach(function (engine) {
+
+  const tr = document.createElement("tr");
+
+  let statusText = engine.category;
+  let statusClass = "clean";
+  let categoryText = "آمن";
+
+  if (engine.category === "malicious") {
+    statusText = "خطر";
+    statusClass = "flagged";
+    categoryText = engine.result || "Malicious";
+  }
+  else if (engine.category === "suspicious") {
+    statusText = "مشبوه";
+    statusClass = "flagged";
+    categoryText = engine.result || "Suspicious";
+  }
+  else if (engine.category === "harmless") {
+    statusText = "آمن";
+    categoryText = "Harmless";
+  }
+  else if (engine.category === "undetected") {
+    statusText = "لم يتم اكتشاف تهديد";
+    categoryText = "Undetected";
+  }
+
+  tr.innerHTML =
+    "<td>" + engine.name + "</td>" +
+    '<td><span class="engine-status ' + statusClass + '">' +
+    '<span class="dot"></span>' +
+    statusText +
+    "</span></td>" +
+    "<td>" + categoryText + "</td>";
+
+  tbody.appendChild(tr);
+});
+
+scanResults.classList.add("show");
+
+scanResults.scrollIntoView({
+  behavior: "smooth",
+  block: "start"
+});
+let text =
+  "🔴 خطر: " + data.malicious +
+  "\n🟡 مشبوه: " + data.suspicious +
+  "\n🟢 آمن: " + data.harmless +
+  "\n\n📋 برامج الفحص:\n\n";
+
+data.engines.forEach(function (engine) {
+  text +=
+    engine.name +
+    " — " +
+    engine.category +
+    "\n";
+});
+
+
+
+console.log("RESULT:", data);
+
+  } catch (error) {
+    console.error(error);
+  
+  }
+
+  scanBtn.disabled = false;
+  scanBtn.classList.remove("loading");
+  scanProgress.classList.remove("show");
+}
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const value = urlInput.value;
+    if(!isLikelyUrl(value)){
+      showError(true);
+      urlInput.focus();
+      return;
+    }
+    showError(false);
+    runScan(value);
+  });
+
+  urlInput.addEventListener('input', function(){
+    if(inputError.classList.contains('show')) showError(false);
+  });
+
+  scanAgainBtn.addEventListener('click', function(){
+    scanResults.classList.remove('show');
+    urlInput.value = '';
+    urlInput.focus();
+    window.scrollTo({ top: document.querySelector('.scan-card').offsetTop - 110, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="page.title">خط دفاعك الرقمي — دليل التأمين من الاختراق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c1420;
+    --ink-2:#101b2c;
+    --panel:#152238;
+    --panel-2:#1a2a45;
+    --line: rgba(233,228,212,0.09);
+    --text:#eae6da;
+    --text-dim:#8fa0b8;
+    --text-dark:#20283a;
+    --gold:#c9a15c;
+    --gold-ink:#c9a15c;
+    --gold-soft: rgba(201,161,92,0.16);
+    --teal:#4fb3a9;
+    --brick:#c0533b;
+    --brick-ink:#c0533b;
+    --parchment:#efe9da;
+    --parchment-2:#e6dfc9;
+    --nav-bg: rgba(12,20,32,0.72);
+    --pin-bg: rgba(16,27,44,0.9);
+    --ring-line:#e9e4d4;
+    --shadow-strong: 0 40px 80px -30px rgba(0,0,0,0.55);
+    --shadow-mockup: 0 30px 60px -20px rgba(0,0,0,0.6);
+    --radius: 18px;
+  }
+  html[data-theme="light"]{
+    --ink:#eef1f5;
+    --ink-2:#e5e9ef;
+    --panel:#ffffff;
+    --panel-2:#eef1f0;
+    --line: rgba(32,40,58,0.11);
+    --text:#1c2536;
+    --text-dim:#5b6473;
+    --gold-ink:#8a6526;
+    --gold-soft: rgba(201,161,92,0.22);
+    --teal:#2f8f86;
+    --brick-ink:#a23f2c;
+    --nav-bg: rgba(255,255,255,0.78);
+    --pin-bg: rgba(255,255,255,0.92);
+    --ring-line:#20283a;
+    --shadow-strong: 0 30px 60px -30px rgba(20,20,30,0.18);
+    --shadow-mockup: 0 20px 45px -20px rgba(20,20,30,0.22);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Tajawal', sans-serif;
+    line-height:1.8;
+    overflow-x:hidden;
+    transition: background .35s ease, color .35s ease;
+  }
+  h1,h2,h3, .display{
+    font-family:'Cairo','Tajawal', sans-serif;
+    margin:0;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em; }
+  a{ color:inherit; }
+  img{max-width:100%;display:block;}
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 28px; }
+  @media (max-width:420px){ .wrap{ padding:0 18px; } }
+  ::selection{ background: var(--gold); color:#1a1204; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ---------------- NAV ---------------- */
+  header.nav{
+    position:fixed; inset:0 0 auto 0; z-index:50;
+    backdrop-filter: blur(10px);
+    background: var(--nav-bg);
+    border-bottom:1px solid var(--line);
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .nav-inner{
+    max-width:1120px; margin:0 auto; padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    /* Header keeps a fixed layout direction no matter which language is active,
+       so switching language never moves the brand / links / controls around. */
+    direction:rtl;
+    flex-wrap:nowrap;
+  }
+  .nav-inner .nav-links,
+  .nav-inner .nav-controls,
+  .nav-inner .brand{ direction:rtl; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Cairo'; font-weight:800; font-size:1.05rem; }
+  .brand-mark{
+    width:30px;height:30px; border-radius:50%;
+    border:2px solid var(--gold-ink);
+    display:flex;align-items:center;justify-content:center;
+    position:relative; flex-shrink:0;
+  }
+  .brand-mark::after{
+    content:""; width:9px;height:9px;border-radius:50%; background:var(--gold-ink);
+  }
+  .nav-links{ display:flex; gap:24px; font-size:0.86rem; color:var(--text-dim); }
+  .nav-links a{ text-decoration:none; transition:color .2s; white-space:nowrap; }
+  .nav-links a:hover{ color:var(--gold-ink); }
+  .nav-links a:focus-visible, a:focus-visible, button:focus-visible{ outline:2px solid var(--gold-ink); outline-offset:3px; border-radius:3px; }
+
+  /* Burger button — hidden on desktop, shown only on small screens.
+     Uses a two-class selector so it reliably beats .ctrl-btn's display:flex. */
+  .nav-controls .burger-btn{ display:none; }
+
+  @media (max-width:820px){
+    .nav-links{
+      display:flex; flex-direction:column; gap:2px;
+      position:absolute; top:100%; inset-inline:0;
+      background:var(--panel); border-bottom:1px solid var(--line);
+      padding:10px 22px 18px;
+      max-height:0; overflow:hidden;
+      opacity:0;
+      transition: max-height .3s ease, opacity .25s ease, padding .3s ease;
+    }
+    .nav-links a{
+      padding:12px 6px; border-bottom:1px solid var(--line);
+      white-space:normal;
+    }
+    .nav-links a:last-child{ border-bottom:none; }
+    header.nav.menu-open .nav-links{
+      max-height:70vh; opacity:1; padding:10px 22px 18px;
+    }
+    .nav-controls .burger-btn{ display:flex; }
+  }
+
+  .nav-controls{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .ctrl-btn{
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--line); background:var(--panel);
+    color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .ctrl-btn:hover{ border-color:var(--gold-ink); color:var(--gold-ink); }
+  .ctrl-btn svg{ width:18px; height:18px; }
+  .icon-moon{ display:none; }
+  html[data-theme="light"] .icon-sun{ display:none; }
+  html[data-theme="light"] .icon-moon{ display:block; }
+  .lang-btn{
+    width:auto; border-radius:999px; padding:0 14px;
+    font-family:'IBM Plex Mono'; font-size:0.76rem; font-weight:600; letter-spacing:0.03em;
+  }
+
+  /* Burger icon: two lines that become an X when open */
+  .burger-btn{ position:relative; }
+  .burger-btn span{
+    position:absolute; left:50%; top:50%;
+    width:16px; height:2px; background:currentColor; border-radius:2px;
+    transform:translate(-50%,-50%) translateY(-4px);
+    transition: transform .25s ease, opacity .2s ease;
+  }
+  .burger-btn span:last-child{ transform:translate(-50%,-50%) translateY(4px); }
+  header.nav.menu-open .burger-btn span:first-child{ transform:translate(-50%,-50%) rotate(45deg); }
+  header.nav.menu-open .burger-btn span:last-child{ transform:translate(-50%,-50%) rotate(-45deg); }
+
+  /* ---------------- BACK TO TOP ---------------- */
+  .back-to-top{
+    position:fixed;
+    inset-inline-end:22px;
+    bottom:22px;
+    z-index:60;
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--gold-ink);
+    color:#1a1204;
+    border:none;
+    box-shadow: 0 14px 30px -10px rgba(0,0,0,0.5);
+    opacity:0; visibility:hidden; transform:translateY(14px) scale(0.9);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s, background .2s ease;
+  }
+  .back-to-top.show{
+    opacity:1; visibility:visible; transform:translateY(0) scale(1);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear 0s, background .2s ease;
+  }
+  .back-to-top:hover{ filter:brightness(1.08); }
+  .back-to-top svg{ width:20px; height:20px; }
+  @media (max-width:420px){
+    .back-to-top{ width:42px; height:42px; inset-inline-end:16px; bottom:16px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .back-to-top{ transition:opacity .15s ease, visibility 0s; }
+  }
+
+  /* ---------------- HERO ---------------- */
+  .hero{
+    position:relative;
+    min-height:100svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:140px 24px 80px;
+    overflow:hidden;
+  }
+  @media (max-width:420px){
+    .hero{ padding:120px 16px 60px; }
+    .nav-inner{ padding:12px 18px; }
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:-20% -20% auto -20%; height:140%;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(201,161,92,0.10), transparent 45%),
+      radial-gradient(circle at 50% 38%, rgba(79,179,169,0.08), transparent 60%);
+    pointer-events:none;
+  }
+  .rings{
+    position:relative;
+    width:min(560px, 86vw); aspect-ratio:1/1;
+    margin:0 auto 18px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .rings svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .ring-core{
+    position:relative; z-index:2;
+    width:19%; aspect-ratio:1/1; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #ffe6b0, var(--gold) 60%, #8a6a34 100%);
+    box-shadow: 0 0 40px rgba(201,161,92,0.55), 0 0 0 8px rgba(201,161,92,0.08);
+  }
+  .layer-pin{
+    position:absolute; z-index:3;
+    /* Center the pin on its anchor point (instead of only offsetting toward
+       one corner) so it protrudes evenly and predictably around the ring,
+       rather than shooting past the visible circle/viewport on some sides. */
+    transform:translate(-50%,-50%);
+    display:flex; align-items:center; gap:8px;
+    background:var(--pin-bg);
+    border:1px solid var(--line);
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:0.72rem;
+    color:var(--text-dim);
+    text-decoration:none;
+    white-space:nowrap;
+    max-width:36vw;
+    transition: border-color .2s, color .2s, transform .2s, background .2s;
+  }
+  .layer-pin .num{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--panel-2); color:var(--gold-ink);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono'; font-size:0.68rem; font-weight:600;
+    flex-shrink:0;
+  }
+  .layer-pin:hover{ border-color: var(--gold-ink); color:var(--text); transform:translate(-50%,-50%) scale(1.06); }
+  .pin-1{ top:5%; left:50%; }
+  .pin-2{ top:36%; left:91%; }
+  .pin-3{ top:86%; left:76%; }
+  .pin-4{ top:86%; left:24%; }
+  .pin-5{ top:36%; left:9%; }
+  @media (max-width:600px){
+    .layer-pin{ font-size:0.62rem; padding:5px 9px; gap:5px; max-width:30vw;}
+    .layer-pin .num{ width:16px;height:16px; font-size:0.58rem;}
+    .pin-2{ left:89%; }
+    .pin-3{ left:78%; }
+    .pin-4{ left:22%; }
+    .pin-5{ left:11%; }
+  }
+  @media (max-width:420px){
+    .rings{ width:min(300px, 90vw); }
+    .layer-pin{
+      font-size:0.56rem; padding:4px 7px; gap:4px;
+      white-space:normal; text-align:center; line-height:1.2; max-width:78px;
+    }
+    .layer-pin .num{ width:14px;height:14px; font-size:0.5rem;}
+    .pin-1{ top:8%; left:50%; }
+    .pin-2{ top:38%; left:86%; }
+    .pin-3{ top:84%; left:74%; }
+    .pin-4{ top:84%; left:26%; }
+    .pin-5{ top:38%; left:14%; }
+  }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    color:var(--gold-ink); font-size:0.78rem; letter-spacing:0.14em;
+    margin-bottom:18px; font-family:'IBM Plex Mono';
+  }
+  .eyebrow::before, .eyebrow::after{ content:""; width:24px; height:1px; background:var(--gold-ink); opacity:.6; }
+  .hero h1{
+    font-size:clamp(2.1rem, 5.4vw, 4rem);
+    font-weight:900;
+    line-height:1.18;
+    max-width:18ch; margin:0 auto;
+  }
+  .hero h1 span{ color:var(--gold-ink); }
+  .hero p.sub{
+    max-width:52ch; margin:22px auto 0; color:var(--text-dim); font-size:1.05rem;
+  }
+  .scroll-cue{
+    margin-top:46px; font-size:0.78rem; color:var(--text-dim); font-family:'IBM Plex Mono';
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .scroll-cue span{ width:1px; height:34px; background:linear-gradient(var(--gold-ink), transparent); animation: fall 1.8s infinite; }
+  @keyframes fall{ 0%{opacity:0} 30%{opacity:1} 100%{opacity:0} }
+
+  /* ---------------- SCANNER PROMO (featured link to the tool) ---------------- */
+  .promo-wrap{ padding:0 0 10px; margin-top:-8px; }
+  .promo{
+    max-width:900px; margin:0 auto;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:22px;
+    padding:clamp(22px,3.6vw,34px);
+    display:flex; flex-wrap:wrap; align-items:center; gap:24px;
+    box-shadow:var(--shadow-mockup);
+    position:relative;
+    text-decoration:none; color:inherit;
+    transition:background .35s ease, border-color .25s ease, transform .2s ease;
+  }
+  .promo:hover{ border-color:var(--gold-ink); transform:translateY(-2px); }
+  .promo::before{
+    content: attr(data-badge);
+    position:absolute; top:-12px; inset-inline-start:26px;
+    background:var(--gold-ink); color:#1a1204;
+    font-family:'IBM Plex Mono'; font-size:0.66rem; font-weight:700; letter-spacing:.06em;
+    padding:5px 13px; border-radius:999px;
+  }
+  .promo-icon{
+    width:58px;height:58px;border-radius:16px;
+    background:var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold-ink); flex-shrink:0;
+  }
+  .promo-icon svg{ width:27px;height:27px; }
+  .promo-body{ flex:1 1 260px; min-width:0; }
+  .promo-body h2{ font-size:clamp(1.1rem,2.1vw,1.4rem); font-weight:800; margin-bottom:6px; }
+  .promo-body p{ color:var(--text-dim); font-size:0.9rem; margin:0; }
+  .promo-cta{
+    flex-shrink:0;
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--gold-ink); color:#1a1204;
+    padding:12px 22px; border-radius:12px; font-weight:700; font-size:0.88rem;
+    white-space:nowrap;
+  }
+  .promo-cta svg{ width:15px;height:15px; }
+  @media (max-width:700px){
+    .promo{ flex-direction:column; text-align:center; }
+    .promo-cta{ width:100%; justify-content:center; }
+  }
+
+  /* ---------------- INTRO ---------------- */
+  .intro{ padding:100px 0 40px; }
+  .intro .wrap{ max-width:760px; text-align:center; }
+  .intro h2{ font-size:clamp(1.5rem,3vw,2.1rem); font-weight:800; margin-bottom:20px; }
+  .intro p{ color:var(--text-dim); font-size:1.05rem; }
+  .intro strong{ color:var(--text); }
+
+  /* ---------------- LAYER SECTIONS ---------------- */
+  .layer{
+    padding:70px 0;
+    border-top:1px solid var(--line);
+    scroll-margin-top:90px;
+  }
+  .layer .wrap{
+    display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start;
+  }
+  .layer .wrap > *{ flex:1 1 380px; min-width:0; }
+  .layer:nth-of-type(even) .wrap{ flex-direction:row-reverse; }
+  @media (max-width:860px){ .layer .wrap{ flex-direction:column !important; gap:30px; } }
+
+  .layer-head .tag{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:'IBM Plex Mono'; font-size:0.78rem; color:var(--gold-ink);
+    background:var(--gold-soft); padding:6px 14px; border-radius:999px; margin-bottom:18px;
+  }
+  .layer-head h3{ font-size:clamp(1.4rem,2.6vw,2rem); font-weight:800; margin-bottom:14px; }
+  .layer-head .icon{
+    width:52px;height:52px; border-radius:14px;
+    background:var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; margin-bottom:20px;
+    color:var(--gold-ink);
+  }
+  .layer-head p{ color:var(--text-dim); }
+
+  .tips{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .tips li{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; display:flex; gap:12px; align-items:flex-start; font-size:0.96rem;
+    transition: background .35s ease, border-color .35s ease;
+  }
+  .tips li::before{
+    content:""; flex-shrink:0; margin-top:7px;
+    width:8px; height:8px; border-radius:50%; background:var(--teal);
+  }
+  .action-card{
+    margin-top:16px;
+    border:1px dashed var(--gold-ink);
+    background:var(--gold-soft);
+    border-radius:14px; padding:16px 18px;
+    font-size:0.9rem; color:var(--text);
+  }
+  .action-card b{ color:var(--gold-ink); font-family:'Cairo'; }
+
+  /* ---------------- PHISHING MOCKUP (signature element, fixed light styling) ---------------- */
+  .phish-wrap{ margin-top:28px; }
+  .phish{
+    background:#fff; color:#1a1a1a; border-radius:12px; overflow:hidden;
+    box-shadow: var(--shadow-mockup);
+    font-family:'Tajawal', sans-serif; position:relative;
+  }
+  .phish-bar{ background:#e9e9ee; padding:10px 14px; font-family:'IBM Plex Mono'; font-size:0.7rem; color:#666; display:flex; gap:6px; align-items:center; }
+  .phish-bar .dot{ width:9px;height:9px;border-radius:50%; background:#d0d0d8; }
+  .phish-body{ padding:20px 22px; font-size:0.92rem; }
+  .phish-from{ font-size:0.82rem; color:#555; margin-bottom:10px; }
+  .phish-from b{ color:#111; }
+  .phish-title{ font-weight:800; font-size:1.02rem; margin-bottom:10px; }
+  .phish-btn{ display:inline-block; margin-top:12px; background:#c0533b; color:#fff; padding:9px 22px; border-radius:6px; font-size:0.85rem; font-weight:700; }
+  .flag{
+    position:relative; display:inline;
+    background: rgba(192,83,59,0.16);
+    border-bottom:2px solid #c0533b;
+    padding:1px 2px;
+  }
+  .annot{
+    margin-top:18px; display:flex; flex-direction:column; gap:10px;
+  }
+  .annot-item{ display:flex; gap:10px; align-items:flex-start; font-size:0.86rem; color:var(--text-dim); }
+  .annot-item .mk{ flex-shrink:0; width:20px;height:20px;border-radius:5px; background:var(--brick); color:#fff; font-family:'IBM Plex Mono'; font-size:0.68rem; display:flex;align-items:center;justify-content:center; margin-top:2px;}
+
+  /* ---------------- INCIDENT ---------------- */
+  .incident{ padding:80px 0; border-top:1px solid var(--line); background:var(--ink-2); transition: background .35s ease; }
+  .incident .wrap{ max-width:820px; }
+  .incident .tag{ display:inline-flex; align-items:center; gap:10px; font-family:'IBM Plex Mono'; font-size:0.78rem; color:var(--brick-ink); background:rgba(192,83,59,0.14); padding:6px 14px; border-radius:999px; margin-bottom:18px; }
+  .incident h2{ font-size:clamp(1.5rem,3vw,2.1rem); font-weight:800; margin-bottom:30px; }
+  .steps{ list-style:none; margin:0; padding:0; counter-reset:step; display:flex; flex-direction:column; gap:0; }
+  .steps li{
+    counter-increment:step;
+    display:flex; gap:18px; padding:18px 0; border-top:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .steps li:last-child{ border-bottom:1px solid var(--line); }
+  .steps li::before{
+    content: counter(step);
+    font-family:'IBM Plex Mono'; font-weight:600; color:var(--brick-ink);
+    border:1px solid var(--brick-ink); border-radius:50%;
+    width:32px;height:32px; flex-shrink:0; display:flex;align-items:center;justify-content:center;
+    font-size:0.85rem;
+  }
+  .steps li p{ margin:0; padding-top:4px; color:var(--text); }
+  .steps li p b{ font-family:'Cairo'; }
+
+  /* ---------------- CHECKLIST (fixed parchment styling both themes) ---------------- */
+  .checklist{ padding:90px 0; }
+  .doc{
+    background:var(--parchment);
+    color:var(--text-dark);
+    border-radius:22px;
+    padding:clamp(28px,5vw,56px);
+    position:relative;
+    box-shadow: var(--shadow-strong);
+  }
+  .doc::before{
+    content: attr(data-label); position:absolute; top:26px; left:26px;
+    font-family:'IBM Plex Mono'; font-size:0.7rem; letter-spacing:.15em;
+    color:#c0533b; border:1px solid #c0533b; padding:4px 10px; border-radius:6px;
+    transform:rotate(-6deg); opacity:0.75;
+  }
+  .doc h2{ font-size:clamp(1.5rem,3vw,2rem); font-weight:900; margin-bottom:6px; }
+  .doc .doc-sub{ color:#5c5340; font-size:0.92rem; margin-bottom:34px; font-family:'IBM Plex Mono'; }
+  .check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 34px; }
+  @media (max-width:700px){ .check-grid{ grid-template-columns:1fr; } }
+  .check-item{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px dashed var(--parchment-2); }
+  .check-box{
+    width:20px;height:20px; border:2px solid var(--text-dark); border-radius:5px; flex-shrink:0; margin-top:2px;
+  }
+  .check-item span{ font-size:0.93rem; }
+
+  /* ---------------- FOOTER ---------------- */
+  footer{ padding:60px 0 40px; border-top:1px solid var(--line); }
+  footer .wrap{ display:flex; flex-direction:column; gap:16px; text-align:center; align-items:center; }
+  footer p{ color:var(--text-dim); font-size:0.85rem; max-width:56ch; }
+  footer .brand{ opacity:0.8; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .reveal{ opacity:1; transform:none; transition:none; }
+    .scroll-cue span{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="brand-mark"></span> <span data-i18n="brand.name">Nostalgia</span></div>
+    <nav class="nav-links" id="nav-links-menu">
+      <a href="#top" data-i18n="nav.home">الرئيسية</a>
+      <a href="#layer-1" data-i18n="nav.awareness">الوعي والحذر</a>
+      <a href="#layer-2" data-i18n="nav.network">أمان الشبكة</a>
+      <a href="#layer-3" data-i18n="nav.account">حماية الحساب</a>
+      <a href="#layer-4" data-i18n="nav.device">تأمين الجهاز</a>
+      <a href="#layer-5" data-i18n="nav.backup">النسخ الاحتياطي</a>
+      <a href="#checklist" data-i18n="nav.checklist">القائمة السريعة</a>
+      <a href="url-scanner.html" data-i18n="nav.scanner">فحص الروابط</a>
+    </nav>
+    <div class="nav-controls">
+      <button id="theme-toggle" class="ctrl-btn" type="button" aria-label="تبديل الوضع الليلي والنهاري">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="lang-toggle" class="ctrl-btn lang-btn mono" type="button" aria-label="Switch language">EN</button>
+      <button id="burger-toggle" class="ctrl-btn burger-btn" type="button" aria-label="فتح القائمة" aria-expanded="false" aria-controls="nav-links-menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="eyebrow mono" data-i18n="hero.eyebrow">دليل عملي · 5 طبقات دفاع</div>
+  <div class="rings" aria-hidden="false">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" style="stroke:var(--ring-line)" stroke-opacity="0.22" stroke-width="0.6"/>
+      <circle cx="50" cy="50" r="36" fill="none" style="stroke:var(--ring-line)" stroke-opacity="0.28" stroke-width="0.6"/>
+      <circle cx="50" cy="50" r="26" fill="none" style="stroke:var(--ring-line)" stroke-opacity="0.34" stroke-width="0.6"/>
+      <circle cx="50" cy="50" r="16" fill="none" stroke="rgba(201,161,92,0.45)" stroke-width="0.7"/>
+    </svg>
+    <div class="ring-core" data-i18n-attr="title:hero.core.title" title="بياناتك"></div>
+    <a href="#layer-1" class="layer-pin pin-1"><span class="num">1</span><span data-i18n="pin.awareness">الوعي والحذر</span></a>
+    <a href="#layer-2" class="layer-pin pin-2"><span class="num">2</span><span data-i18n="pin.network">أمان الشبكة</span></a>
+    <a href="#layer-3" class="layer-pin pin-3"><span class="num">3</span><span data-i18n="pin.account">حماية الحساب</span></a>
+    <a href="#layer-4" class="layer-pin pin-4"><span class="num">4</span><span data-i18n="pin.device">تأمين الجهاز</span></a>
+    <a href="#layer-5" class="layer-pin pin-5"><span class="num">5</span><span data-i18n="pin.backup">النسخ الاحتياطي</span></a>
+  </div>
+  <h1 data-i18n="hero.title">حصّن نفسك رقميًا<br>طبقة <span>ورا</span> طبقة</h1>
+  <p class="sub" data-i18n="hero.sub">محدش بيتخترق بضغطة واحدة. المخترق لازم يعدّي خمس طبقات دفاع عشان يوصل لبياناتك — وكل طبقة تقفلها كويس بتقفل الباب في وشه.</p>
+  <div class="scroll-cue"><span data-i18n="hero.scroll">انزل تحت</span><span></span></div>
+</section>
+
+<section class="promo-wrap reveal">
+  <div class="wrap">
+    <a href="url-scanner.html" class="promo" id="promo-card" data-badge="فحص">
+      <div class="promo-icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 12a3.5 3.5 0 0 0 3.5 3.5h4A3.5 3.5 0 0 0 19.5 12v0A3.5 3.5 0 0 0 16 8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15.5 12A3.5 3.5 0 0 0 12 8.5H8A3.5 3.5 0 0 0 4.5 12v0A3.5 3.5 0 0 0 8 15.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <div class="promo-body">
+        <h2 data-i18n="promo.title">جرّب أداة فحص الروابط</h2>
+        <p data-i18n="promo.desc">قبل ما تضغط على أي رابط مشبوه، الصقه في الأداة واعرف مستوى خطورته في ثواني.</p>
+      </div>
+      <span class="promo-cta">
+        <span data-i18n="promo.cta">افحص رابط الآن</span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h13M13 7l4 5-4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+  </div>
+</section>
+
+<section class="intro">
+  <div class="wrap">
+    <h2 data-i18n="intro.title">فكرة "الدفاع بالعمق"</h2>
+    <p data-i18n="intro.body">مبدأ بسيط بيستخدمه خبراء الأمن السيبراني: متعتمدش على حاجة واحدة تحميك. ابني <strong>خمس طبقات</strong> حوالين بياناتك — من وعيك الشخصي في الخارج، لحد النسخة الاحتياطية في القلب. لو طبقة اتخرقت، الباقي لسه بيحميك.</p>
+  </div>
+</section>
+
+<!-- LAYER 1 -->
+<section class="layer reveal" id="layer-1">
+  <div class="wrap">
+    <div class="layer-head">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tag" data-i18n="layer1.tag">الطبقة ١ — أول خط دفاع</div>
+      <h3 data-i18n="layer1.title">الوعي والحذر</h3>
+      <p data-i18n="layer1.desc">أكتر من ٩٠٪ من الاختراقات بتبدأ برسالة أو رابط خدع حد إنه يضغط عليه. لو عرفت تكتشف الرسالة المزيفة، تكون قفلت الباب قبل ما يتفتح أصلًا.</p>
+    </div>
+    <div>
+      <ul class="tips">
+        <li data-i18n="layer1.tip1">محدش من الدعم الفني أو البنك هيطلب منك كلمة السر أو كود التحقق (OTP) — لو حصل، ده احتيال أكيد.</li>
+        <li data-i18n="layer1.tip2">تحقق دايمًا من عنوان المرسل الحقيقي، مش بس الاسم الظاهر في الرسالة.</li>
+        <li data-i18n="layer1.tip3">الرسايل اللي بتستعجلك ("حسابك هيتقفل خلال ساعة") مصممة عشان تمنعك تفكر — خد وقتك دايمًا.</li>
+        <li data-i18n="layer1.tip4">لو مش متأكد من رابط، ادخل على الموقع الرسمي بنفسك من المتصفح بدل ما تضغط عليه.</li>
+      </ul>
+      <div class="phish-wrap">
+        <div class="phish">
+          <div class="phish-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;&nbsp;<span data-i18n="phish.bar">رسالة واردة</span></div>
+          <div class="phish-body">
+            <div class="phish-from" data-i18n="phish.from">من: <b>البنك الأهلي</b> — <span class="flag">support@bank-secure-alerts.net</span></div>
+            <div class="phish-title" data-i18n="phish.title">تنبيه هام: <span class="flag">حسابك هيتقفل خلال ٢٤ ساعة!</span></div>
+            <p style="margin:0;color:#333" data-i18n="phish.body">فضلاً قم بتفعيل حسابك فورًا عن طريق إدخال <span class="flag">رقم البطاقة وكلمة السر</span> من خلال الرابط أدناه.</p>
+            <span class="phish-btn" data-i18n="phish.btn">تفعيل الحساب الآن</span>
+          </div>
+        </div>
+        <div class="annot">
+          <div class="annot-item"><span class="mk">١</span><span data-i18n="phish.annot1">نطاق غريب مش النطاق الرسمي للبنك — ده أوضح علامة احتيال.</span></div>
+          <div class="annot-item"><span class="mk">٢</span><span data-i18n="phish.annot2">ضغط بالوقت عشان يمنعك تفكر أو تتأكد.</span></div>
+          <div class="annot-item"><span class="mk">٣</span><span data-i18n="phish.annot3">طلب بيانات حساسة (كلمة سر / رقم بطاقة) — البنوك مبتطلبش كده في رسالة.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 2 -->
+<section class="layer reveal" id="layer-2">
+  <div class="wrap">
+    <div class="layer-head">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M2 9c5.5-5 14.5-5 20 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.5 13c3.6-3.2 9.4-3.2 13 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 17c1.9-1.6 4.1-1.6 6 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="20" r="1.3" fill="currentColor"/></svg>
+      </div>
+      <div class="tag" data-i18n="layer2.tag">الطبقة ٢ — بوابة الاتصال</div>
+      <h3 data-i18n="layer2.title">أمان الشبكة</h3>
+      <p data-i18n="layer2.desc">أي بيانات بتتبعت من جهازك بتعدي على شبكة — لو الشبكة دي مش آمنة، أي حد عليها ممكن يشوف اللي بتبعته.</p>
+    </div>
+    <div>
+      <ul class="tips">
+        <li data-i18n="layer2.tip1">متعملش عمليات بنكية أو تسجيل دخول لحسابات مهمة على واي فاي عام مفتوح (مقهى، مطار).</li>
+        <li data-i18n="layer2.tip2">لو مضطر تستخدم شبكة عامة، شغّل VPN موثوق يشفّر اتصالك.</li>
+        <li data-i18n="layer2.tip3">غيّر كلمة سر الراوتر بتاعك في البيت من الإعدادات الافتراضية اللي جاي بيها.</li>
+        <li data-i18n="layer2.tip4">فعّل تشفير WPA2 أو WPA3 على الراوتر، ومتسيبش الشبكة مفتوحة من غير باسورد.</li>
+      </ul>
+      <div class="action-card" data-i18n="layer2.action"><b>افعلها دلوقتي:</b> ادخل إعدادات الراوتر وشوف نوع التشفير المفعّل — لو WEP أو "بدون"، غيّره فورًا.</div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 3 -->
+<section class="layer reveal" id="layer-3">
+  <div class="wrap">
+    <div class="layer-head">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></svg>
+      </div>
+      <div class="tag" data-i18n="layer3.tag">الطبقة ٣ — مفاتيح الحساب</div>
+      <h3 data-i18n="layer3.title">حماية الحساب</h3>
+      <p data-i18n="layer3.desc">كلمة السر هي القفل، والتحقق بخطوتين هو الترباس الإضافي. الاتنين مع بعض بيصعّبوا المهمة جدًا على أي حد بيحاول يدخل مكانك.</p>
+    </div>
+    <div>
+      <ul class="tips">
+        <li data-i18n="layer3.tip1">استخدم كلمة سر مختلفة لكل حساب، طويلة (١٢ حرف فأكثر) وغير متوقعة — تجنب اسمك أو تاريخ ميلادك.</li>
+        <li data-i18n="layer3.tip2">استخدم مدير كلمات سر (Password Manager) يحفظلك الباسوردات المعقدة بدل ما تحاول تفتكرها.</li>
+        <li data-i18n="layer3.tip3">فعّل التحقق بخطوتين (2FA) على البريد والحسابات المهمة — يفضّل تطبيق مصادقة بدل الرسائل النصية لو متاح.</li>
+        <li data-i18n="layer3.tip4">راجع الأجهزة المسجّل دخولها على حساباتك من وقت للتاني، واقفل أي جهاز مش عارفه.</li>
+      </ul>
+      <div class="action-card" data-i18n="layer3.action"><b>افعلها دلوقتي:</b> افتح إعدادات بريدك الإلكتروني وفعّل التحقق بخطوتين لو لسه مش مفعّل.</div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 4 -->
+<section class="layer reveal" id="layer-4">
+  <div class="wrap">
+    <div class="layer-head">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M9 21h6M12 17v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 10l2.5 2.5L16 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tag" data-i18n="layer4.tag">الطبقة ٤ — الجهاز نفسه</div>
+      <h3 data-i18n="layer4.title">تأمين الجهاز</h3>
+      <p data-i18n="layer4.desc">ثغرة أمنية في نظام قديم هي زي باب مفتوح محدش بيقفله. التحديثات مش مجرد مزايا جديدة — هي ترقيعات لثغرات حقيقية.</p>
+    </div>
+    <div>
+      <ul class="tips">
+        <li data-i18n="layer4.tip1">حدّث نظام التشغيل والتطبيقات أول ما يظهر تحديث متاح، متأجلش كتير.</li>
+        <li data-i18n="layer4.tip2">فعّل قفل الشاشة (رقم سري، بصمة، أو وجه) على الموبايل واللابتوب.</li>
+        <li data-i18n="layer4.tip3">راجع صلاحيات التطبيقات (كاميرا، ميكروفون، موقع) وامنع أي صلاحية التطبيق مش محتاجها فعلًا.</li>
+        <li data-i18n="layer4.tip4">نزّل تطبيقات من المتاجر الرسمية بس (Google Play / App Store)، وابعد عن الروابط الخارجية.</li>
+      </ul>
+      <div class="action-card" data-i18n="layer4.action"><b>افعلها دلوقتي:</b> روح لإعدادات التحديثات وشغّل "تحديث تلقائي" لنظام التشغيل والتطبيقات المهمة.</div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 5 -->
+<section class="layer reveal" id="layer-5">
+  <div class="wrap">
+    <div class="layer-head">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 18a4 4 0 0 1-1-7.9A5 5 0 0 1 15.5 8 4.5 4.5 0 0 1 17 17H7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12v6M9.5 15.5 12 18l2.5-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tag" data-i18n="layer5.tag">الطبقة 5 — القلب المحمي</div>
+      <h3 data-i18n="layer5.title">النسخ الاحتياطي</h3>
+      <p data-i18n="layer5.desc">حتى لو كل الطبقات فشلت، النسخة الاحتياطية هي شبكة الأمان الأخيرة. بياناتك تفقد قيمتها الخطر لو عندك نسخة منها في مكان تاني آمن.</p>
+    </div>
+    <div>
+      <ul class="tips">
+        <li data-i18n="layer5.tip1">اعمل نسخة احتياطية دورية لصورك ومستنداتك المهمة في مكان تاني غير جهازك.</li>
+        <li data-i18n="layer5.tip2">اتبع قاعدة ٣-٢-١: ٣ نسخ من البيانات، على وسيطين تخزين مختلفين، واحدة منهم بره المكان.</li>
+        <li data-i18n="layer5.tip3">شفّر النسخ الاحتياطية الحساسة بكلمة سر إضافية.</li>
+        <li data-i18n="layer5.tip4">اختبر استرجاع النسخة الاحتياطية من وقت للتاني عشان تتأكد إنها فعلًا شغالة وقت الحاجة.</li>
+      </ul>
+      <div class="action-card" data-i18n="layer5.action"><b>افعلها دلوقتي:</b> اعمل نسخة من صور وملفات جهازك المهمة على تخزين سحابي أو هارد خارجي النهاردة.</div>
+    </div>
+  </div>
+</section>
+
+<section class="incident reveal">
+  <div class="wrap">
+    <div class="tag" data-i18n="incident.tag">لو حصل ولحظة الطوارئ</div>
+    <h2 data-i18n="incident.title">لو حسيت إنك اتخترقت — افعل كده بالترتيب</h2>
+    <ol class="steps">
+      <li><p data-i18n="incident.step1"><b>اقطع الاتصال بالإنترنت فورًا</b> — شغّل وضع الطيران أو افصل الواي فاي عشان توقف أي تحكم عن بعد.</p></li>
+      <li><p data-i18n="incident.step2"><b>غيّر كلمة سر الحساب المتأثر</b> من جهاز تاني آمن، ومتستخدمش نفس الباسورد القديم بأي تعديل بسيط.</p></li>
+      <li><p data-i18n="incident.step3"><b>فعّل التحقق بخطوتين</b> لو مش مفعّل، وسجّل خروج من كل الأجهزة المتصلة بالحساب.</p></li>
+      <li><p data-i18n="incident.step4"><b>راجع نشاط الحساب الأخير</b> — رسائل مرسلة، تحويلات، أو تعديلات مش انت اللي عملتها.</p></li>
+      <li><p data-i18n="incident.step5"><b>أبلغ الجهة المعنية فورًا</b> — البنك لو في بيانات مالية، أو مزود الخدمة لو حساب بريد أو سوشيال ميديا.</p></li>
+      <li><p data-i18n="incident.step6"><b>اعمل فحص فيروسات كامل</b> على الجهاز قبل ما ترجع تستخدمه بشكل طبيعي.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="checklist reveal" id="checklist">
+  <div class="wrap">
+    <div class="doc" data-label="سرّي">
+      <h2 data-i18n="doc.title">قائمة تحقق سريعة</h2>
+      <p class="doc-sub mono" data-i18n="doc.sub">راجعها كل ٣ شهور — دقيقتين بس</p>
+      <div class="check-grid">
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.1">معنديش أي كلمة سر متكررة بين حسابين</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.2">التحقق بخطوتين مفعّل على البريد والحسابات المهمة</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.3">الراوتر بتاعي مش شغال بكلمة السر الافتراضية</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.4">نظام التشغيل والتطبيقات محدّثة لآخر إصدار</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.5">عندي نسخة احتياطية حديثة من ملفاتي المهمة</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.6">مش بضغط على روابط من رسائل مش متوقعها</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.7">قفل الشاشة مفعّل على الموبايل واللابتوب</span></div>
+        <div class="check-item"><span class="check-box"></span><span data-i18n="check.8">راجعت صلاحيات التطبيقات آخر مرة من أكتر من شهرين</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark"></span> <span data-i18n="brand.name">Nostalgia</span></div>
+    <p data-i18n="footer.text">محدش هيبقى محمي ١٠٠٪، بس كل طبقة تقفلها كويس بتقلل الخطر بشكل كبير جدًا. الموقع ده للتوعية العامة فقط، ومش بديل عن استشارة متخصص أمن سيبراني لو تعرضت لاختراق فعلي أو تهديد جدي.</p>
+  </div>
+</footer>
+
+<button id="back-to-top" class="back-to-top" type="button" aria-label="الرجوع لأعلى الصفحة">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<script>
+(function(){
+  const I18N = {
+    'page.title': { ar:`خط دفاعك الرقمي — دليل التأمين من الاختراق`, en:`Your Digital Defense Line — A Guide to Staying Safe Online` },
+    'brand.name': { ar:`Nostalgia`, en:`Nostalgia` },
+    'nav.home': { ar:`الرئيسية`, en:`Home` },
+    'nav.awareness': { ar:`الوعي والحذر`, en:`Awareness` },
+    'nav.network': { ar:`أمان الشبكة`, en:`Network` },
+    'nav.account': { ar:`حماية الحساب`, en:`Account` },
+    'nav.device': { ar:`تأمين الجهاز`, en:`Device` },
+    'nav.backup': { ar:`النسخ الاحتياطي`, en:`Backups` },
+    'nav.checklist': { ar:`القائمة السريعة`, en:`Checklist` },
+    'nav.scanner': { ar:`فحص الروابط`, en:`URL Scanner` },
+    'hero.eyebrow': { ar:`دليل عملي · 5 طبقات دفاع`, en:`A Practical Guide · 5 Layers of Defense` },
+    'hero.core.title': { ar:`بياناتك`, en:`Your data` },
+    'pin.awareness': { ar:`الوعي والحذر`, en:`Awareness` },
+    'pin.network': { ar:`أمان الشبكة`, en:`Network` },
+    'pin.account': { ar:`حماية الحساب`, en:`Account` },
+    'pin.device': { ar:`تأمين الجهاز`, en:`Device` },
+    'pin.backup': { ar:`النسخ الاحتياطي`, en:`Backup` },
+    'hero.title': { ar:`حصّن نفسك رقميًا<br>طبقة <span>ورا</span> طبقة`, en:`Protect Yourself Online<br>One <span>Layer</span> at a Time` },
+    'hero.sub': { ar:`محدش بيتخترق بضغطة واحدة. المخترق لازم يعدّي خمس طبقات دفاع عشان يوصل لبياناتك — وكل طبقة تقفلها كويس بتقفل الباب في وشه.`, en:`No one gets hacked with a single click. An attacker has to break through five layers of defense to reach your data — and every layer you secure properly shuts the door in their face.` },
+    'hero.scroll': { ar:`انزل تحت`, en:`Scroll down` },
+
+    'promo.badge': { ar:`فحص`, en:`scan` },
+    'promo.title': { ar:`جرّب أداة فحص الروابط`, en:`Try the URL Scanner` },
+    'promo.desc': { ar:`قبل ما تضغط على أي رابط مشبوه، الصقه في الأداة واعرف مستوى خطورته في ثواني.`, en:`Before you click a suspicious link, paste it into the tool and see its risk level in seconds.` },
+    'promo.cta': { ar:`افحص رابط الآن`, en:`Scan a link now` },
+
+    'intro.title': { ar:`فكرة "الدفاع بالعمق"`, en:`The "Defense in Depth" Idea` },
+    'intro.body': { ar:`مبدأ بسيط بيستخدمه خبراء الأمن السيبراني: متعتمدش على حاجة واحدة تحميك. ابني <strong>خمس طبقات</strong> حوالين بياناتك — من وعيك الشخصي في الخارج، لحد النسخة الاحتياطية في القلب. لو طبقة اتخرقت، الباقي لسه بيحميك.`, en:`A simple principle security experts rely on: never depend on a single line of defense. Build <strong>five layers</strong> around your data — from your own awareness on the outside, to your backup at the core. If one layer fails, the rest still protect you.` },
+
+    'layer1.tag': { ar:`الطبقة ١ — أول خط دفاع`, en:`Layer 1 — The First Line of Defense` },
+    'layer1.title': { ar:`الوعي والحذر`, en:`Awareness & Caution` },
+    'layer1.desc': { ar:`أكتر من ٩٠٪ من الاختراقات بتبدأ برسالة أو رابط خدع حد إنه يضغط عليه. لو عرفت تكتشف الرسالة المزيفة، تكون قفلت الباب قبل ما يتفتح أصلًا.`, en:`Over 90% of breaches start with a message or link that tricked someone into clicking. If you can spot a fake message, you close the door before it ever opens.` },
+    'layer1.tip1': { ar:`محدش من الدعم الفني أو البنك هيطلب منك كلمة السر أو كود التحقق (OTP) — لو حصل، ده احتيال أكيد.`, en:`No support agent or bank will ever ask for your password or verification code (OTP) — if they do, it's a scam.` },
+    'layer1.tip2': { ar:`تحقق دايمًا من عنوان المرسل الحقيقي، مش بس الاسم الظاهر في الرسالة.`, en:`Always check the sender's actual address, not just the display name.` },
+    'layer1.tip3': { ar:`الرسايل اللي بتستعجلك ("حسابك هيتقفل خلال ساعة") مصممة عشان تمنعك تفكر — خد وقتك دايمًا.`, en:`Messages that rush you ("your account will be locked in an hour") are designed to stop you from thinking — always take your time.` },
+    'layer1.tip4': { ar:`لو مش متأكد من رابط، ادخل على الموقع الرسمي بنفسك من المتصفح بدل ما تضغط عليه.`, en:`If you're unsure about a link, type the official website into your browser yourself instead of clicking it.` },
+    'layer1.action': { ar:`<b>افعلها دلوقتي:</b> راجع آخر رسالة مشبوهة وصلتلك وشوف لو فيها أي علامة من علامات الاحتيال اللي فوق.`, en:`<b>Do it now:</b> Look back at the last suspicious message you received and check it against the red flags above.` },
+
+    'phish.bar': { ar:`رسالة واردة`, en:`Incoming message` },
+    'phish.from': { ar:`من: <b>البنك الأهلي</b> — <span class="flag">support@bank-secure-alerts.net</span>`, en:`From: <b>National Bank</b> — <span class="flag">support@bank-secure-alerts.net</span>` },
+    'phish.title': { ar:`تنبيه هام: <span class="flag">حسابك هيتقفل خلال ٢٤ ساعة!</span>`, en:`Important Alert: <span class="flag">Your account will be locked in 24 hours!</span>` },
+    'phish.body': { ar:`فضلاً قم بتفعيل حسابك فورًا عن طريق إدخال <span class="flag">رقم البطاقة وكلمة السر</span> من خلال الرابط أدناه.`, en:`Please activate your account immediately by entering your <span class="flag">card number and password</span> via the link below.` },
+    'phish.btn': { ar:`تفعيل الحساب الآن`, en:`Activate Account Now` },
+    'phish.annot1': { ar:`نطاق غريب مش النطاق الرسمي للبنك — ده أوضح علامة احتيال.`, en:`A strange domain, not the bank's official one — this is the clearest scam signal.` },
+    'phish.annot2': { ar:`ضغط بالوقت عشان يمنعك تفكر أو تتأكد.`, en:`Time pressure, designed to stop you from thinking or checking.` },
+    'phish.annot3': { ar:`طلب بيانات حساسة (كلمة سر / رقم بطاقة) — البنوك مبتطلبش كده في رسالة.`, en:`A request for sensitive data (password / card number) — banks never ask for this in a message.` },
+
+    'layer2.tag': { ar:`الطبقة ٢ — بوابة الاتصال`, en:`Layer 2 — The Connection Gateway` },
+    'layer2.title': { ar:`أمان الشبكة`, en:`Network Security` },
+    'layer2.desc': { ar:`أي بيانات بتتبعت من جهازك بتعدي على شبكة — لو الشبكة دي مش آمنة، أي حد عليها ممكن يشوف اللي بتبعته.`, en:`Any data sent from your device travels over a network — if that network isn't secure, anyone on it could see what you're sending.` },
+    'layer2.tip1': { ar:`متعملش عمليات بنكية أو تسجيل دخول لحسابات مهمة على واي فاي عام مفتوح (مقهى، مطار).`, en:`Avoid banking or logging into important accounts on open public Wi-Fi (cafés, airports).` },
+    'layer2.tip2': { ar:`لو مضطر تستخدم شبكة عامة، شغّل VPN موثوق يشفّر اتصالك.`, en:`If you must use a public network, turn on a trusted VPN to encrypt your connection.` },
+    'layer2.tip3': { ar:`غيّر كلمة سر الراوتر بتاعك في البيت من الإعدادات الافتراضية اللي جاي بيها.`, en:`Change your home router's password from the default it shipped with.` },
+    'layer2.tip4': { ar:`فعّل تشفير WPA2 أو WPA3 على الراوتر، ومتسيبش الشبكة مفتوحة من غير باسورد.`, en:`Enable WPA2 or WPA3 encryption on your router, and never leave the network open without a password.` },
+    'layer2.action': { ar:`<b>افعلها دلوقتي:</b> ادخل إعدادات الراوتر وشوف نوع التشفير المفعّل — لو WEP أو "بدون"، غيّره فورًا.`, en:`<b>Do it now:</b> Open your router settings and check the encryption type — if it says WEP or "none," change it immediately.` },
+
+    'layer3.tag': { ar:`الطبقة ٣ — مفاتيح الحساب`, en:`Layer 3 — The Keys to Your Account` },
+    'layer3.title': { ar:`حماية الحساب`, en:`Account Security` },
+    'layer3.desc': { ar:`كلمة السر هي القفل، والتحقق بخطوتين هو الترباس الإضافي. الاتنين مع بعض بيصعّبوا المهمة جدًا على أي حد بيحاول يدخل مكانك.`, en:`Your password is the lock, and two-factor authentication is the extra bolt. Together, they make it far harder for anyone to get in as you.` },
+    'layer3.tip1': { ar:`استخدم كلمة سر مختلفة لكل حساب، طويلة (١٢ حرف فأكثر) وغير متوقعة — تجنب اسمك أو تاريخ ميلادك.`, en:`Use a different password for every account — long (12+ characters) and unpredictable. Avoid your name or birthdate.` },
+    'layer3.tip2': { ar:`استخدم مدير كلمات سر (Password Manager) يحفظلك الباسوردات المعقدة بدل ما تحاول تفتكرها.`, en:`Use a password manager to store complex passwords instead of trying to remember them yourself.` },
+    'layer3.tip3': { ar:`فعّل التحقق بخطوتين (2FA) على البريد والحسابات المهمة — يفضّل تطبيق مصادقة بدل الرسائل النصية لو متاح.`, en:`Enable two-factor authentication (2FA) on your email and important accounts — an authenticator app is better than SMS when available.` },
+    'layer3.tip4': { ar:`راجع الأجهزة المسجّل دخولها على حساباتك من وقت للتاني، واقفل أي جهاز مش عارفه.`, en:`Periodically review the devices logged into your accounts, and sign out anything you don't recognize.` },
+    'layer3.action': { ar:`<b>افعلها دلوقتي:</b> افتح إعدادات بريدك الإلكتروني وفعّل التحقق بخطوتين لو لسه مش مفعّل.`, en:`<b>Do it now:</b> Open your email settings and turn on two-factor authentication if it isn't already.` },
+
+    'layer4.tag': { ar:`الطبقة ٤ — الجهاز نفسه`, en:`Layer 4 — The Device Itself` },
+    'layer4.title': { ar:`تأمين الجهاز`, en:`Device Security` },
+    'layer4.desc': { ar:`ثغرة أمنية في نظام قديم هي زي باب مفتوح محدش بيقفله. التحديثات مش مجرد مزايا جديدة — هي ترقيعات لثغرات حقيقية.`, en:`A security flaw in outdated software is like an open door nobody bothers to close. Updates aren't just new features — they patch real vulnerabilities.` },
+    'layer4.tip1': { ar:`حدّث نظام التشغيل والتطبيقات أول ما يظهر تحديث متاح، متأجلش كتير.`, en:`Update your operating system and apps as soon as an update is available — don't put it off too long.` },
+    'layer4.tip2': { ar:`فعّل قفل الشاشة (رقم سري، بصمة، أو وجه) على الموبايل واللابتوب.`, en:`Enable screen lock (PIN, fingerprint, or face) on your phone and laptop.` },
+    'layer4.tip3': { ar:`راجع صلاحيات التطبيقات (كاميرا، ميكروفون، موقع) وامنع أي صلاحية التطبيق مش محتاجها فعلًا.`, en:`Review app permissions (camera, microphone, location) and revoke anything an app doesn't genuinely need.` },
+    'layer4.tip4': { ar:`نزّل تطبيقات من المتاجر الرسمية بس (Google Play / App Store)، وابعد عن الروابط الخارجية.`, en:`Only download apps from official stores (Google Play / App Store), and stay away from external links.` },
+    'layer4.action': { ar:`<b>افعلها دلوقتي:</b> روح لإعدادات التحديثات وشغّل "تحديث تلقائي" لنظام التشغيل والتطبيقات المهمة.`, en:`<b>Do it now:</b> Go to your update settings and turn on "automatic updates" for your OS and key apps.` },
+
+    'layer5.tag': { ar:`الطبقة 5 — القلب المحمي`, en:`Layer 5 — The Protected Core` },
+    'layer5.title': { ar:`النسخ الاحتياطي`, en:`Backups` },
+    'layer5.desc': { ar:`حتى لو كل الطبقات فشلت، النسخة الاحتياطية هي شبكة الأمان الأخيرة. بياناتك تفقد قيمتها الخطر لو عندك نسخة منها في مكان تاني آمن.`, en:`Even if every other layer fails, a backup is your last safety net. Your data loses its danger if you already have a copy of it somewhere safe.` },
+    'layer5.tip1': { ar:`اعمل نسخة احتياطية دورية لصورك ومستنداتك المهمة في مكان تاني غير جهازك.`, en:`Regularly back up your important photos and documents somewhere other than your device.` },
+    'layer5.tip2': { ar:`اتبع قاعدة ٣-٢-١: ٣ نسخ من البيانات، على وسيطين تخزين مختلفين، واحدة منهم بره المكان.`, en:`Follow the 3-2-1 rule: 3 copies of your data, on 2 different storage types, with 1 copy stored offsite.` },
+    'layer5.tip3': { ar:`شفّر النسخ الاحتياطية الحساسة بكلمة سر إضافية.`, en:`Encrypt sensitive backups with an additional password.` },
+    'layer5.tip4': { ar:`اختبر استرجاع النسخة الاحتياطية من وقت للتاني عشان تتأكد إنها فعلًا شغالة وقت الحاجة.`, en:`Test restoring your backup from time to time to make sure it actually works when you need it.` },
+    'layer5.action': { ar:`<b>افعلها دلوقتي:</b> اعمل نسخة من صور وملفات جهازك المهمة على تخزين سحابي أو هارد خارجي النهاردة.`, en:`<b>Do it now:</b> Back up your important photos and files to cloud storage or an external drive today.` },
+
+    'incident.tag': { ar:`لو حصل ولحظة الطوارئ`, en:`If It Happens — Emergency Steps` },
+    'incident.title': { ar:`لو حسيت إنك اتخترقت — افعل كده بالترتيب`, en:`If You Think You've Been Hacked — Do This, In Order` },
+    'incident.step1': { ar:`<b>اقطع الاتصال بالإنترنت فورًا</b> — شغّل وضع الطيران أو افصل الواي فاي عشان توقف أي تحكم عن بعد.`, en:`<b>Disconnect from the internet immediately</b> — turn on airplane mode or disconnect Wi-Fi to stop any remote control.` },
+    'incident.step2': { ar:`<b>غيّر كلمة سر الحساب المتأثر</b> من جهاز تاني آمن، ومتستخدمش نفس الباسورد القديم بأي تعديل بسيط.`, en:`<b>Change the password of the affected account</b> from a different, safe device — don't reuse the old password with a small tweak.` },
+    'incident.step3': { ar:`<b>فعّل التحقق بخطوتين</b> لو مش مفعّل، وسجّل خروج من كل الأجهزة المتصلة بالحساب.`, en:`<b>Enable two-factor authentication</b> if it isn't on, and sign out of every device connected to the account.` },
+    'incident.step4': { ar:`<b>راجع نشاط الحساب الأخير</b> — رسائل مرسلة، تحويلات، أو تعديلات مش انت اللي عملتها.`, en:`<b>Review recent account activity</b> — sent messages, transfers, or changes you didn't make.` },
+    'incident.step5': { ar:`<b>أبلغ الجهة المعنية فورًا</b> — البنك لو في بيانات مالية، أو مزود الخدمة لو حساب بريد أو سوشيال ميديا.`, en:`<b>Report it immediately</b> — your bank if financial data is involved, or the service provider for an email or social account.` },
+    'incident.step6': { ar:`<b>اعمل فحص فيروسات كامل</b> على الجهاز قبل ما ترجع تستخدمه بشكل طبيعي.`, en:`<b>Run a full antivirus scan</b> on the device before you go back to using it normally.` },
+
+    'doc.confidential': { ar:`سرّي`, en:`Confidential` },
+    'doc.title': { ar:`قائمة تحقق سريعة`, en:`Quick Checklist` },
+    'doc.sub': { ar:`راجعها كل ٣ شهور — دقيقتين بس`, en:`Review it every 3 months — takes just 2 minutes` },
+    'check.1': { ar:`معنديش أي كلمة سر متكررة بين حسابين`, en:`I don't reuse any password between two accounts` },
+    'check.2': { ar:`التحقق بخطوتين مفعّل على البريد والحسابات المهمة`, en:`Two-factor authentication is on for email and key accounts` },
+    'check.3': { ar:`الراوتر بتاعي مش شغال بكلمة السر الافتراضية`, en:`My router isn't running on its default password` },
+    'check.4': { ar:`نظام التشغيل والتطبيقات محدّثة لآخر إصدار`, en:`My OS and apps are updated to the latest version` },
+    'check.5': { ar:`عندي نسخة احتياطية حديثة من ملفاتي المهمة`, en:`I have a recent backup of my important files` },
+    'check.6': { ar:`مش بضغط على روابط من رسائل مش متوقعها`, en:`I don't click links from messages I wasn't expecting` },
+    'check.7': { ar:`قفل الشاشة مفعّل على الموبايل واللابتوب`, en:`Screen lock is enabled on my phone and laptop` },
+    'check.8': { ar:`راجعت صلاحيات التطبيقات آخر مرة من أكتر من شهرين`, en:`I last reviewed app permissions more than two months ago` },
+
+    'footer.text': { ar:`محدش هيبقى محمي ١٠٠٪، بس كل طبقة تقفلها كويس بتقلل الخطر بشكل كبير جدًا. الموقع ده للتوعية العامة فقط، ومش بديل عن استشارة متخصص أمن سيبراني لو تعرضت لاختراق فعلي أو تهديد جدي.`, en:`No one is ever 100% protected, but securing each layer properly reduces the risk dramatically. This site is for general awareness only, and isn't a substitute for consulting a cybersecurity professional if you've experienced an actual breach or a serious threat.` },
+
+    'theme.toLight': { ar:`تفعيل الوضع النهاري`, en:`Switch to light mode` },
+    'theme.toDark': { ar:`تفعيل الوضع الليلي`, en:`Switch to dark mode` },
+    'menu.open': { ar:`فتح القائمة`, en:`Open menu` },
+    'menu.close': { ar:`إغلاق القائمة`, en:`Close menu` },
+    'backtotop.label': { ar:`الرجوع لأعلى الصفحة`, en:`Back to top` }
+  };
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const langBtn = document.getElementById('lang-toggle');
+  const doc = document.querySelector('.doc');
+  const promoCard = document.getElementById('promo-card');
+  const backToTopBtn = document.getElementById('back-to-top');
+
+  function t(lang, key){
+    const entry = I18N[key];
+    return entry ? entry[lang] : null;
+  }
+
+  function applyTheme(theme){
+    root.setAttribute('data-theme', theme);
+    const lang = root.getAttribute('lang') || 'ar';
+    themeBtn.setAttribute('aria-label', t(lang, theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
+  }
+
+  function applyLang(lang){
+    root.setAttribute('lang', lang);
+    root.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    document.title = t(lang, 'page.title');
+    langBtn.textContent = lang === 'ar' ? 'EN' : 'AR';
+
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      const val = t(lang, el.getAttribute('data-i18n'));
+      if(val != null) el.innerHTML = val;
+    });
+    document.querySelectorAll('[data-i18n-attr]').forEach(function(el){
+      const spec = el.getAttribute('data-i18n-attr').split(':');
+      const val = t(lang, spec[1]);
+      if(val != null) el.setAttribute(spec[0], val);
+    });
+    if(doc){ doc.setAttribute('data-label', t(lang, 'doc.confidential')); }
+    if(promoCard){ promoCard.setAttribute('data-badge', t(lang, 'promo.badge')); }
+
+    const theme = root.getAttribute('data-theme') || 'dark';
+    themeBtn.setAttribute('aria-label', t(lang, theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
+
+    if(backToTopBtn){ backToTopBtn.setAttribute('aria-label', t(lang, 'backtotop.label')); }
+
+    const burgerBtnEl = document.getElementById('burger-toggle');
+    if(burgerBtnEl){
+      const isOpen = document.querySelector('header.nav').classList.contains('menu-open');
+      burgerBtnEl.setAttribute('aria-label', t(lang, isOpen ? 'menu.close' : 'menu.open'));
+    }
+  }
+
+  const savedTheme = localStorage.getItem('df-theme') || 'dark';
+  const savedLang = localStorage.getItem('df-lang') || 'ar';
+  applyTheme(savedTheme);
+  applyLang(savedLang);
+
+  themeBtn.addEventListener('click', function(){
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('df-theme', next);
+  });
+  langBtn.addEventListener('click', function(){
+    const next = root.getAttribute('lang') === 'ar' ? 'en' : 'ar';
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(prefersReducedMotion){
+      applyLang(next);
+      localStorage.setItem('df-lang', next);
+      return;
+    }
+    // Fade the page out first, swap all the text while it's invisible,
+    // then fade back in — so the switch feels smooth instead of a sudden jump.
+    document.body.style.transition = 'opacity .22s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function(){
+      applyLang(next);
+      localStorage.setItem('df-lang', next);
+      document.body.style.opacity = '1';
+    }, 220);
+  });
+
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  /* ---- Back to top button: appears after scrolling past the hero ---- */
+  function updateBackToTop(){
+    if(window.scrollY > 480){
+      backToTopBtn.classList.add('show');
+    } else {
+      backToTopBtn.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', updateBackToTop, { passive:true });
+  updateBackToTop();
+  backToTopBtn.addEventListener('click', function(){
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  });
+
+  /* ---- Mobile burger menu ---- */
+  const headerEl = document.querySelector('header.nav');
+  const burgerBtn = document.getElementById('burger-toggle');
+  const navLinksMenu = document.getElementById('nav-links-menu');
+
+  function currentLang(){ return root.getAttribute('lang') || 'ar'; }
+  function closeMenu(){
+    headerEl.classList.remove('menu-open');
+    burgerBtn.setAttribute('aria-expanded', 'false');
+    burgerBtn.setAttribute('aria-label', t(currentLang(), 'menu.open'));
+  }
+  function toggleMenu(){
+    const isOpen = headerEl.classList.toggle('menu-open');
+    burgerBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    burgerBtn.setAttribute('aria-label', t(currentLang(), isOpen ? 'menu.close' : 'menu.open'));
+  }
+
+  burgerBtn.addEventListener('click', toggleMenu);
+
+  // Close the menu after tapping a link
+  navLinksMenu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', closeMenu);
+  });
+
+  // Close the menu if the viewport grows back past the mobile breakpoint
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 820) closeMenu();
+  });
+})();
+</script>
+
+</body>
+</html>
