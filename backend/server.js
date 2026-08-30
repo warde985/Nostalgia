@@ -1,3 +1,4 @@
+```js
 require("dotenv").config();
 
 const express = require("express");
@@ -9,13 +10,19 @@ app.use(cors());
 app.use(express.json());
 
 
-// اختبار السيرفر
+// ===============================
+// Test server
+// ===============================
+
 app.get("/", function (req, res) {
   res.send("Server is running!");
 });
 
 
-// اختبار API
+// ===============================
+// Test API
+// ===============================
+
 app.get("/api/test", function (req, res) {
   res.json({
     message: "API is working!"
@@ -23,7 +30,10 @@ app.get("/api/test", function (req, res) {
 });
 
 
-// فحص الرابط باستخدام VirusTotal
+// ===============================
+// VirusTotal - Check Link
+// ===============================
+
 app.post("/api/check-link", async function (req, res) {
   try {
     const url = req.body.url;
@@ -34,7 +44,13 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // إرسال الرابط إلى VirusTotal
+    if (!process.env.VIRUSTOTAL_API_KEY) {
+      return res.status(500).json({
+        error: "VirusTotal API key is not configured"
+      });
+    }
+
+    // Send URL to VirusTotal
     const formData = new URLSearchParams();
     formData.append("url", url);
 
@@ -61,12 +77,12 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = scanData.data.id;
 
-    // انتظار التحليل
+    // Wait for analysis
     await new Promise(function (resolve) {
       setTimeout(resolve, 2000);
     });
 
-    // جلب نتيجة التحليل
+    // Get analysis result
     const resultResponse = await fetch(
       "https://www.virustotal.com/api/v3/analyses/" + analysisId,
       {
@@ -85,10 +101,9 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    const stats = resultData.data.attributes.stats;
-    const results = resultData.data.attributes.results;
+    const stats = resultData.data.attributes.stats || {};
+    const results = resultData.data.attributes.results || {};
 
-    // أسماء برامج الحماية ونتائجها
     const engines = Object.values(results).map(function (engine) {
       return {
         name: engine.engine_name,
@@ -97,18 +112,17 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
-    // إرسال النتائج للموقع
     res.json({
       url: url,
-      malicious: stats.malicious,
-      suspicious: stats.suspicious,
-      harmless: stats.harmless,
-      undetected: stats.undetected,
+      malicious: stats.malicious || 0,
+      suspicious: stats.suspicious || 0,
+      harmless: stats.harmless || 0,
+      undetected: stats.undetected || 0,
       engines: engines
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Check-link error:", error);
 
     res.status(500).json({
       error: "حدث خطأ أثناء الفحص"
@@ -117,9 +131,9 @@ app.post("/api/check-link", async function (req, res) {
 });
 
 
-// تشغيل السيرفر - لازم يكون آخر الملف
-const PORT = process.env.PORT || 5000;
-
+// ===============================
+// VirusTotal - Check URL
+// ===============================
 
 app.post("/api/check-url", async function (req, res) {
   try {
@@ -131,72 +145,15 @@ app.post("/api/check-url", async function (req, res) {
       });
     }
 
-    // إرسال الرابط إلى VirusTotal
+    if (!process.env.VIRUSTOTAL_API_KEY) {
+      return res.status(500).json({
+        error: "VirusTotal API key is not configured"
+      });
+    }
+
+    // Submit URL to VirusTotal
     const submitResponse = await fetch(
       "https://www.virustotal.com/api/v3/urls",
       {
         method: "POST",
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-          url: url
-        })
-      }
-    );
-
-    const submitData = await submitResponse.json();
-
-    if (!submitResponse.ok) {
-      return res.status(submitResponse.status).json(submitData);
-    }
-
-    const analysisId = submitData.data.id;
-
-    // انتظار انتهاء التحليل
-    let analysis;
-
-    for (let i = 0; i < 10; i++) {
-      await new Promise(function (resolve) {
-        setTimeout(resolve, 2000);
-      });
-
-      const resultResponse = await fetch(
-        `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
-        {
-          headers: {
-            "x-apikey": process.env.VIRUSTOTAL_API_KEY
-          }
-        }
-      );
-
-      analysis = await resultResponse.json();
-
-      if (
-        analysis.data &&
-        analysis.data.attributes.status === "completed"
-      ) {
-        break;
-      }
-    }
-
-    const stats = analysis.data.attributes.stats;
-    const results = analysis.data.attributes.results;
-
-    res.json({
-      stats: stats,
-      results: results
-    });
-
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Server error"
-    });
-  }
-});
-app.listen(PORT, function () {
-  console.log("Server running on port " + PORT);
-});
+```
