@@ -50,7 +50,6 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // Send URL to VirusTotal
     const formData = new URLSearchParams();
     formData.append("url", url);
 
@@ -77,12 +76,10 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = scanData.data.id;
 
-    // Wait for analysis
     await new Promise(function (resolve) {
       setTimeout(resolve, 2000);
     });
 
-    // Get analysis result
     const resultResponse = await fetch(
       "https://www.virustotal.com/api/v3/analyses/" + analysisId,
       {
@@ -151,9 +148,86 @@ app.post("/api/check-url", async function (req, res) {
       });
     }
 
-    // Submit URL to VirusTotal
     const submitResponse = await fetch(
       "https://www.virustotal.com/api/v3/urls",
       {
         method: "POST",
+        headers: {
+          "x-apikey": process.env.VIRUSTOTAL_API_KEY,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          url: url
+        })
+      }
+    );
+
+    const submitData = await submitResponse.json();
+
+    if (!submitResponse.ok) {
+      return res.status(submitResponse.status).json(submitData);
+    }
+
+    const analysisId = submitData.data.id;
+
+    let analysis = null;
+
+    for (let i = 0; i < 10; i++) {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 2000);
+      });
+
+      const resultResponse = await fetch(
+        "https://www.virustotal.com/api/v3/analyses/" + analysisId,
+        {
+          headers: {
+            "x-apikey": process.env.VIRUSTOTAL_API_KEY
+          }
+        }
+      );
+
+      analysis = await resultResponse.json();
+
+      if (
+        analysis.data &&
+        analysis.data.attributes &&
+        analysis.data.attributes.status === "completed"
+      ) {
+        break;
+      }
+    }
+
+    if (
+      !analysis ||
+      !analysis.data ||
+      !analysis.data.attributes
+    ) {
+      return res.status(500).json({
+        error: "Could not retrieve VirusTotal analysis"
+      });
+    }
+
+    const stats = analysis.data.attributes.stats || {};
+    const results = analysis.data.attributes.results || {};
+
+    res.json({
+      stats: stats,
+      results: results
+    });
+
+  } catch (error) {
+    console.error("Check-url error:", error);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+
+// ===============================
+// Vercel
+// ===============================
+
+module.exports = app;
 ```
