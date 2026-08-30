@@ -60,30 +60,47 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = scanData.data.id;
 
-    await new Promise(function (resolve) {
-      setTimeout(resolve, 2000);
-    });
+    let resultData = null;
 
-    const resultResponse = await fetch(
-      "https://www.virustotal.com/api/v3/analyses/" + analysisId,
-      {
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY
+    for (let i = 0; i < 15; i++) {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 2000);
+      });
+
+      const resultResponse = await fetch(
+        "https://www.virustotal.com/api/v3/analyses/" + analysisId,
+        {
+          headers: {
+            "x-apikey": process.env.VIRUSTOTAL_API_KEY
+          }
         }
+      );
+
+      resultData = await resultResponse.json();
+
+      if (
+        resultData.data &&
+        resultData.data.attributes &&
+        resultData.data.attributes.status === "completed"
+      ) {
+        break;
       }
-    );
+    }
 
-    const resultData = await resultResponse.json();
-
-    if (!resultResponse.ok) {
-      return res.status(resultResponse.status).json({
-        error: "Could not get analysis result",
-        details: resultData
+    if (
+      !resultData ||
+      !resultData.data ||
+      !resultData.data.attributes
+    ) {
+      return res.status(500).json({
+        error: "Could not retrieve VirusTotal analysis"
       });
     }
 
-    const stats = resultData.data.attributes.stats || {};
-    const results = resultData.data.attributes.results || {};
+    const attributes = resultData.data.attributes;
+
+    const stats = attributes.stats || {};
+    const results = attributes.results || {};
 
     const engines = Object.values(results).map(function (engine) {
       return {
@@ -95,6 +112,7 @@ app.post("/api/check-link", async function (req, res) {
 
     res.json({
       url: url,
+      status: attributes.status,
       malicious: stats.malicious || 0,
       suspicious: stats.suspicious || 0,
       harmless: stats.harmless || 0,
