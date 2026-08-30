@@ -1,4 +1,3 @@
-```js
 require("dotenv").config();
 
 const express = require("express");
@@ -9,30 +8,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
-// ===============================
-// Test server
-// ===============================
-
 app.get("/", function (req, res) {
   res.send("Server is running!");
 });
-
-
-// ===============================
-// Test API
-// ===============================
 
 app.get("/api/test", function (req, res) {
   res.json({
     message: "API is working!"
   });
 });
-
-
-// ===============================
-// VirusTotal - Check Link
-// ===============================
 
 app.post("/api/check-link", async function (req, res) {
   try {
@@ -127,11 +111,6 @@ app.post("/api/check-link", async function (req, res) {
   }
 });
 
-
-// ===============================
-// VirusTotal - Check URL
-// ===============================
-
 app.post("/api/check-url", async function (req, res) {
   try {
     const url = req.body.url;
@@ -224,10 +203,4 @@ app.post("/api/check-url", async function (req, res) {
   }
 });
 
-
-// ===============================
-// Vercel
-// ===============================
-
 module.exports = app;
-```
