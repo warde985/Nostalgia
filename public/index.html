@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-i18n="page.title">خط دفاعك الرقمي — دليل التأمين من الاختراق</title>
+<title data-i18n="page.title">Nostalgia — دليل التأمين من الاختراق</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -84,8 +84,6 @@
   .nav-inner{
     max-width:1120px; margin:0 auto; padding:14px 28px;
     display:flex; align-items:center; justify-content:space-between; gap:16px;
-    /* Header keeps a fixed layout direction no matter which language is active,
-       so switching language never moves the brand / links / controls around. */
     direction:rtl;
     flex-wrap:nowrap;
   }
@@ -107,8 +105,6 @@
   .nav-links a:hover{ color:var(--gold-ink); }
   .nav-links a:focus-visible, a:focus-visible, button:focus-visible{ outline:2px solid var(--gold-ink); outline-offset:3px; border-radius:3px; }
 
-  /* Burger button — hidden on desktop, shown only on small screens.
-     Uses a two-class selector so it reliably beats .ctrl-btn's display:flex. */
   .nav-controls .burger-btn{ display:none; }
 
   @media (max-width:820px){
@@ -150,7 +146,6 @@
     font-family:'IBM Plex Mono'; font-size:0.76rem; font-weight:600; letter-spacing:0.03em;
   }
 
-  /* Burger icon: two lines that become an X when open */
   .burger-btn{ position:relative; }
   .burger-btn span{
     position:absolute; left:50%; top:50%;
@@ -226,9 +221,6 @@
   }
   .layer-pin{
     position:absolute; z-index:3;
-    /* Center the pin on its anchor point (instead of only offsetting toward
-       one corner) so it protrudes evenly and predictably around the ring,
-       rather than shooting past the visible circle/viewport on some sides. */
     transform:translate(-50%,-50%);
     display:flex; align-items:center; gap:8px;
     background:var(--pin-bg);
@@ -341,6 +333,89 @@
   @media (max-width:700px){
     .promo{ flex-direction:column; text-align:center; }
     .promo-cta{ width:100%; justify-content:center; }
+  }
+
+  /* ---------------- SOCIAL FAB (floating contact widget) ---------------- */
+  .social-fab{
+    position:fixed;
+    inset-inline-start:22px;
+    bottom:22px;
+    z-index:60;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .social-list{
+    display:flex; flex-direction:column; gap:10px;
+    align-items:center;
+  }
+  .social-item{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#fff;
+  color:#000;
+
+  border:2px solid #000;
+  box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);
+
+  opacity:0;
+  transform:translateY(14px) scale(0.7);
+  transition:opacity .22s ease, transform .22s ease,
+             background .2s ease, color .2s ease;
+  pointer-events:none;
+}
+
+.social-item:hover{
+  background:#000;
+  color:#fff;
+  transform:translateY(0) scale(1.08) !important;
+}
+  .social-item svg{ width:22px; height:22px; }
+  .social-item:hover{ filter:brightness(1.08); transform:translateY(0) scale(1.08) !important; }
+  .social-fab.open .social-item{
+    opacity:1; transform:translateY(0) scale(1);
+    pointer-events:auto;
+  }
+  .social-fab.open .social-item:nth-child(1){ transition-delay:.03s; }
+  .social-fab.open .social-item:nth-child(2){ transition-delay:.09s; }
+  .social-fab-btn{
+    width:52px; height:52px; border-radius:50%;
+    border:none;
+    background:var(--gold-ink); color:#1a1204;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 14px 30px -10px rgba(0,0,0,0.55);
+    position:relative;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .social-fab-btn:hover{ filter:brightness(1.06); }
+  .social-fab-btn svg{ width:22px; height:22px; position:absolute; transition:opacity .2s ease, transform .25s ease; }
+  .social-fab-btn .icon-chat{ opacity:1; transform:rotate(0deg); }
+  .social-fab-btn .icon-x{ opacity:0; transform:rotate(-45deg); }
+  .social-fab.open .social-fab-btn .icon-chat{ opacity:0; transform:rotate(45deg); }
+  .social-fab.open .social-fab-btn .icon-x{ opacity:1; transform:rotate(0deg); }
+  .social-fab-btn::before{
+    content:""; position:absolute; inset:-6px; border-radius:50%;
+    border:2px solid var(--gold-ink); opacity:.5;
+    animation: pulse-ring 2.4s ease-out infinite;
+  }
+  .social-fab.open .social-fab-btn::before{ animation:none; opacity:0; }
+  @keyframes pulse-ring{
+    0%{ transform:scale(1); opacity:.5; }
+    80%{ transform:scale(1.35); opacity:0; }
+    100%{ transform:scale(1.35); opacity:0; }
+  }
+  @media (max-width:420px){
+    .social-fab{ inset-inline-start:16px; bottom:16px; }
+    .social-fab-btn{ width:46px; height:46px; }
+    .social-item{ width:40px; height:40px; }
+    .social-item svg{ width:19px; height:19px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .social-fab-btn::before{ animation:none; }
+    .social-item{ transition:opacity .12s ease; }
   }
 
   /* ---------------- INTRO ---------------- */
@@ -483,6 +558,332 @@
     .reveal{ opacity:1; transform:none; transition:none; }
     .scroll-cue span{ animation:none; }
   }
+
+.social-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.social-item{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+
+  background:#fff;
+  color:#000;
+  border:2px solid #000;
+
+  box-shadow:0 10px 24px -8px rgba(0,0,0,.5);
+
+  text-decoration:none;
+
+  opacity:0;
+  transform:translateY(14px) scale(.7);
+
+  transition:
+    opacity .25s ease,
+    transform .35s cubic-bezier(.22,1,.36,1);
+
+  pointer-events:none;
+}
+
+.social-item svg{
+  width:22px;
+  height:22px;
+  flex-shrink:0;
+}
+
+/* اليوزر خارج الدائرة */
+.social-username{
+  position:absolute;
+  white-space:nowrap;
+  direction:ltr;
+
+  background:#fff;
+  color:#000;
+
+  padding:7px 12px;
+  border-radius:10px;
+
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.75rem;
+  font-weight:700;
+
+  box-shadow:0 8px 20px rgba(0,0,0,.2);
+
+  opacity:0;
+  pointer-events:none;
+
+  transition:
+    opacity .3s ease,
+    transform .5s cubic-bezier(.22,1,.36,1);
+}
+
+/* 🇦🇪 العربي: اليوزر شمال الأيقونة */
+html[dir="rtl"] .social-username{
+  right:54px;
+  left:auto;
+  transform:translateX(25px) scale(.8);
+}
+
+html[dir="rtl"] .social-fab.open .social-username{
+  opacity:1;
+  transform:translateX(0) scale(1);
+}
+
+/* 🇬🇧 الإنجليزي: اليوزر يمين الأيقونة */
+html[dir="ltr"] .social-username{
+  left:54px;
+  right:auto;
+  transform:translateX(-25px) scale(.8);
+}
+
+html[dir="ltr"] .social-fab.open .social-username{
+  opacity:1;
+  transform:translateX(0) scale(1);
+}
+
+/* Animation for Arabic */
+html[dir="rtl"] .social-username{
+  transform:translateX(25px) scale(.8);
+}
+
+html[dir="rtl"] .social-fab.open .social-username{
+  transform:translateX(0) scale(1);
+}
+
+/* Animation for English */
+html[dir="ltr"] .social-username{
+  transform:translateX(-25px) scale(.8);
+}
+
+html[dir="ltr"] .social-fab.open .social-username{
+  transform:translateX(0) scale(1);
+}
+
+/* عند فتح الشات */
+.social-fab.open .social-item{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+
+/* اليوزر يخرج من الأيقونة */
+.social-fab.open .social-username{
+  opacity:1;
+  transform:translateX(0) scale(1);
+}
+
+/* تأخير بسيط عشان الأيقونة تظهر الأول */
+.social-fab.open .social-item:nth-child(1) .social-username{
+  transition-delay:.18s;
+}
+
+.social-fab.open .social-item:nth-child(2) .social-username{
+  transition-delay:.28s;
+}
+
+.social-fab.open .social-item:nth-child(1){
+  transition-delay:.03s;
+}
+
+.social-fab.open .social-item:nth-child(2){
+  transition-delay:.09s;
+}
+
+.social-item:hover{
+  background:#000;
+  color:#fff;
+}
+  
+
+/* ===== Learn protection menu ===== */
+
+.learn-menu{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+/* نفس مستوى وشكل روابط الهيدر */
+.learn-menu-btn{
+  appearance:none;
+  -webkit-appearance:none;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  gap:5px;
+  height:auto;
+
+  padding:0;
+  margin:0;
+
+  background:transparent;
+  border:0;
+
+  color:inherit;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:inherit;
+  line-height:inherit;
+
+  cursor:pointer;
+}
+
+/* سهم SVG متوازن مع النص */
+.learn-arrow{
+  width:14px;
+  height:14px;
+  flex:0 0 14px;
+
+  display:block;
+
+  transition:transform .25s ease;
+}
+
+.learn-menu.open .learn-arrow{
+  transform:rotate(180deg);
+}
+
+/* القائمة على الكمبيوتر */
+.learn-dropdown{
+  position:absolute;
+  top:calc(100% + 14px);
+  inset-inline-start:0;
+
+  width:190px;
+  padding:8px;
+
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+
+  box-shadow:0 18px 45px rgba(0,0,0,.22);
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+
+  transform:translateY(-6px);
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease,
+    visibility .2s ease;
+
+  z-index:999;
+}
+
+.learn-menu.open .learn-dropdown{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+.learn-dropdown a{
+  display:block;
+  padding:10px 12px;
+  border-radius:9px;
+  text-decoration:none;
+}
+
+.learn-dropdown a:hover{
+  background:var(--panel-2);
+}
+
+
+/* ===== Mobile & Small Screens ===== */
+@media(max-width:820px){
+
+  .nav-inner{
+    padding:12px 18px;
+    gap:10px;
+  }
+
+  .nav-links{
+    padding:12px 18px 20px;
+  }
+
+  .nav-links > a{
+    display:flex;
+    align-items:center;
+    min-height:48px;
+    padding:12px 8px;
+  }
+
+  .learn-menu{
+    display:block;
+    width:100%;
+    border-bottom:1px solid var(--line);
+  }
+
+  .learn-menu-btn{
+    width:100%;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 8px;
+    color:var(--text-dim);
+    font-size:0.86rem;
+    font-weight:inherit;
+    background:transparent;
+    border:0;
+  }
+
+  .learn-arrow{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+  }
+
+  .learn-dropdown{
+    position:static;
+    width:100%;
+    max-height:0;
+    overflow:hidden;
+    padding:0;
+    margin:0;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+    background:transparent;
+    border:0;
+    border-radius:0;
+    box-shadow:none;
+    transition:max-height .35s ease;
+  }
+
+  .learn-menu.open .learn-dropdown{
+    max-height:400px;
+    padding:4px 0 12px;
+  }
+
+  .learn-dropdown a{
+    display:flex;
+    align-items:center;
+    min-height:44px;
+    margin:3px 0;
+    padding:10px 16px;
+    border:1px solid transparent;
+    border-radius:10px;
+    font-size:.84rem;
+    background:var(--panel-2);
+    text-decoration:none;
+  }
+}
 </style>
 </head>
 <body>
@@ -490,16 +891,39 @@
 <header class="nav">
   <div class="nav-inner">
     <div class="brand"><span class="brand-mark"></span> <span data-i18n="brand.name">Nostalgia</span></div>
-    <nav class="nav-links" id="nav-links-menu">
-      <a href="#top" data-i18n="nav.home">الرئيسية</a>
+   <nav class="nav-links" id="nav-links-menu">
+
+  <a href="#top" data-i18n="nav.home">الرئيسية</a>
+
+  <div class="learn-menu">
+    <button class="learn-menu-btn" id="learn-menu-btn"
+            type="button" aria-expanded="false">
+      <span data-i18n="nav.learn">تعلّم الحماية</span>
+
+      <svg class="learn-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 9l6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="learn-dropdown">
       <a href="#layer-1" data-i18n="nav.awareness">الوعي والحذر</a>
       <a href="#layer-2" data-i18n="nav.network">أمان الشبكة</a>
       <a href="#layer-3" data-i18n="nav.account">حماية الحساب</a>
       <a href="#layer-4" data-i18n="nav.device">تأمين الجهاز</a>
       <a href="#layer-5" data-i18n="nav.backup">النسخ الاحتياطي</a>
-      <a href="#checklist" data-i18n="nav.checklist">القائمة السريعة</a>
-      <a href="url-scanner.html" data-i18n="nav.scanner">فحص الروابط</a>
-    </nav>
+    </div>
+  </div>
+
+  <a href="#checklist" data-i18n="nav.checklist">القائمة السريعة</a>
+
+  <a href="url-scanner.html" data-i18n="nav.scanner">فحص الروابط</a>
+
+</nav>
     <div class="nav-controls">
       <button id="theme-toggle" class="ctrl-btn" type="button" aria-label="تبديل الوضع الليلي والنهاري">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -734,10 +1158,52 @@
   <svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
 
+<!-- Floating "contact us" widget: tap the button to reveal quick contact/social links -->
+<div class="social-fab" id="social-fab">
+  <div class="social-list" id="social-list">
+    <div class="social-list" id="social-list">
+
+  <a href="https://www.tiktok.com/@nvbc4_"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="social-item"
+     aria-label="Instagram nvbc4_">
+
+    <svg viewBox="0 0 24 24" fill="currentColor">
+  <path d="M13.7 3h2.35c.28 1.77 1.42 3.16 3.15 3.63v2.36c-1.24-.1-2.4-.5-3.4-1.13v6.6a5.05 5.05 0 1 1-4.32-5v2.33a2.72 2.72 0 1 0 1.92 2.6L13.7 3Z"/>
+</svg>
+
+    <span class="social-username">@nvbc4_</span>
+
+  </a>
+
+
+  <a href="https://www.tiktok.com/@coremoh"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="social-item"
+     aria-label="Instagram coremoh">
+
+    <svg viewBox="0 0 24 24" fill="currentColor">
+  <path d="M13.7 3h2.35c.28 1.77 1.42 3.16 3.15 3.63v2.36c-1.24-.1-2.4-.5-3.4-1.13v6.6a5.05 5.05 0 1 1-4.32-5v2.33a2.72 2.72 0 1 0 1.92 2.6L13.7 3Z"/>
+</svg>
+
+    <span class="social-username">@coremoh</span>
+
+  </a>
+
+</div>
+  </div>
+  <button id="social-fab-btn" class="social-fab-btn" type="button" aria-label="طرق التواصل" aria-expanded="false" aria-controls="social-list">
+    <svg class="icon-chat" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.6 8.6 0 0 1-3.6-.7L3 20l1-4.9A8.4 8.4 0 1 1 21 11.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="icon-x" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
 <script>
 (function(){
   const I18N = {
-    'page.title': { ar:`خط دفاعك الرقمي — دليل التأمين من الاختراق`, en:`Your Digital Defense Line — A Guide to Staying Safe Online` },
+    'page.title': { ar:`Nostalgia — دليل التأمين من الاختراق`, en:`Nostalgia — A Guide to Staying Safe Online` },
     'brand.name': { ar:`Nostalgia`, en:`Nostalgia` },
     'nav.home': { ar:`الرئيسية`, en:`Home` },
     'nav.awareness': { ar:`الوعي والحذر`, en:`Awareness` },
@@ -747,6 +1213,7 @@
     'nav.backup': { ar:`النسخ الاحتياطي`, en:`Backups` },
     'nav.checklist': { ar:`القائمة السريعة`, en:`Checklist` },
     'nav.scanner': { ar:`فحص الروابط`, en:`URL Scanner` },
+    'nav.learn': { ar:`تعلّم الحماية`, en:`Learn Protection` },
     'hero.eyebrow': { ar:`دليل عملي · 5 طبقات دفاع`, en:`A Practical Guide · 5 Layers of Defense` },
     'hero.core.title': { ar:`بياناتك`, en:`Your data` },
     'pin.awareness': { ar:`الوعي والحذر`, en:`Awareness` },
@@ -762,6 +1229,9 @@
     'promo.title': { ar:`جرّب أداة فحص الروابط`, en:`Try the URL Scanner` },
     'promo.desc': { ar:`قبل ما تضغط على أي رابط مشبوه، الصقه في الأداة واعرف مستوى خطورته في ثواني.`, en:`Before you click a suspicious link, paste it into the tool and see its risk level in seconds.` },
     'promo.cta': { ar:`افحص رابط الآن`, en:`Scan a link now` },
+
+    'social.toggle': { ar:`طرق التواصل`, en:`Contact us` },
+    'social.close': { ar:`إغلاق طرق التواصل`, en:`Close contact options` },
 
     'intro.title': { ar:`فكرة "الدفاع بالعمق"`, en:`The "Defense in Depth" Idea` },
     'intro.body': { ar:`مبدأ بسيط بيستخدمه خبراء الأمن السيبراني: متعتمدش على حاجة واحدة تحميك. ابني <strong>خمس طبقات</strong> حوالين بياناتك — من وعيك الشخصي في الخارج، لحد النسخة الاحتياطية في القلب. لو طبقة اتخرقت، الباقي لسه بيحميك.`, en:`A simple principle security experts rely on: never depend on a single line of defense. Build <strong>five layers</strong> around your data — from your own awareness on the outside, to your backup at the core. If one layer fails, the rest still protect you.` },
@@ -856,6 +1326,7 @@
   const doc = document.querySelector('.doc');
   const promoCard = document.getElementById('promo-card');
   const backToTopBtn = document.getElementById('back-to-top');
+  const socialFabBtn = document.getElementById('social-fab-btn');
 
   function t(lang, key){
     const entry = I18N[key];
@@ -891,6 +1362,11 @@
 
     if(backToTopBtn){ backToTopBtn.setAttribute('aria-label', t(lang, 'backtotop.label')); }
 
+    if(socialFabBtn){
+      const socialOpen = document.getElementById('social-fab').classList.contains('open');
+      socialFabBtn.setAttribute('aria-label', t(lang, socialOpen ? 'social.close' : 'social.toggle'));
+    }
+
     const burgerBtnEl = document.getElementById('burger-toggle');
     if(burgerBtnEl){
       const isOpen = document.querySelector('header.nav').classList.contains('menu-open');
@@ -916,8 +1392,6 @@
       localStorage.setItem('df-lang', next);
       return;
     }
-    // Fade the page out first, swap all the text while it's invisible,
-    // then fade back in — so the switch feels smooth instead of a sudden jump.
     document.body.style.transition = 'opacity .22s ease';
     document.body.style.opacity = '0';
     setTimeout(function(){
@@ -947,6 +1421,35 @@
     window.scrollTo({ top:0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   });
 
+  /* ---- Floating social/contact widget ---- */
+  const socialFab = document.getElementById('social-fab');
+
+  function currentLang2(){ return root.getAttribute('lang') || 'ar'; }
+  function closeSocial(){
+    socialFab.classList.remove('open');
+    socialFabBtn.setAttribute('aria-expanded', 'false');
+    socialFabBtn.setAttribute('aria-label', t(currentLang2(), 'social.toggle'));
+  }
+  function toggleSocial(){
+    const isOpen = socialFab.classList.toggle('open');
+    socialFabBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    socialFabBtn.setAttribute('aria-label', t(currentLang2(), isOpen ? 'social.close' : 'social.toggle'));
+  }
+  socialFabBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    toggleSocial();
+  });
+  // Close it when tapping anywhere else on the page
+  document.addEventListener('click', function(e){
+    if(socialFab.classList.contains('open') && !socialFab.contains(e.target)){
+      closeSocial();
+    }
+  });
+  // Close it with Escape
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') closeSocial();
+  });
+
   /* ---- Mobile burger menu ---- */
   const headerEl = document.querySelector('header.nav');
   const burgerBtn = document.getElementById('burger-toggle');
@@ -966,15 +1469,61 @@
 
   burgerBtn.addEventListener('click', toggleMenu);
 
-  // Close the menu after tapping a link
   navLinksMenu.querySelectorAll('a').forEach(function(a){
     a.addEventListener('click', closeMenu);
   });
 
-  // Close the menu if the viewport grows back past the mobile breakpoint
   window.addEventListener('resize', function(){
     if(window.innerWidth > 820) closeMenu();
   });
+
+
+  /* ---- Learn protection menu ---- */
+
+const learnMenu = document.querySelector('.learn-menu');
+const learnMenuBtn = document.getElementById('learn-menu-btn');
+
+learnMenuBtn.addEventListener('click', function(e){
+
+  e.stopPropagation();
+
+  const isOpen = learnMenu.classList.toggle('open');
+
+  learnMenuBtn.setAttribute(
+    'aria-expanded',
+    isOpen ? 'true' : 'false'
+  );
+
+});
+
+document.addEventListener('click', function(e){
+
+  if(
+    learnMenu.classList.contains('open') &&
+    !learnMenu.contains(e.target)
+  ){
+
+    learnMenu.classList.remove('open');
+    learnMenuBtn.setAttribute('aria-expanded','false');
+
+  }
+
+});
+
+document.querySelectorAll('.learn-dropdown a').forEach(function(link){
+
+  link.addEventListener('click', function(){
+
+    learnMenu.classList.remove('open');
+
+    learnMenuBtn.setAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+  });
+
+});
 })();
 </script>
 
