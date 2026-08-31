@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const dns = require("dns").promises;
 
 function toUrlId(url) {
   return Buffer.from(url)
@@ -9,6 +10,77 @@ function toUrlId(url) {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
+}
+
+async function getDomainInfo(rawUrl) {
+  let hostname;
+  try {
+    hostname = new URL(rawUrl.startsWith("http") ? rawUrl : "https://" + rawUrl).hostname;
+  } catch (e) {
+    return null;
+  }
+
+  const info = {
+    ip: null,
+    country: null,
+    host: null,
+    registrar: null,
+    created: null,
+    age: null
+  };
+
+  // 1) IP حقيقي عن طريق DNS
+  try {
+    const dnsResult = await dns.lookup(hostname);
+    info.ip = dnsResult.address;
+  } catch (e) {
+    console.error("DNS lookup failed:", e.message);
+  }
+
+  // 2) بلد ومزود الاستضافة عن طريق الـ IP
+  if (info.ip) {
+    try {
+      const geoRes = await fetch(`https://ipapi.co/${info.ip}/json/`);
+      const geoData = await geoRes.json();
+      info.country = geoData.country_name || null;
+      info.host = geoData.org || null;
+    } catch (e) {
+      console.error("IP geolocation failed:", e.message);
+    }
+  }
+
+  // 3) جهة التسجيل وتاريخ الإنشاء عن طريق RDAP (بديل WHOIS الحديث)
+  try {
+    const rdapRes = await fetch(`https://rdap.org/domain/${hostname}`);
+    if (rdapRes.ok) {
+      const rdapData = await rdapRes.json();
+
+      const registrarEntity = (rdapData.entities || []).find(function (e) {
+        return (e.roles || []).includes("registrar");
+      });
+      if (registrarEntity && registrarEntity.vcardArray) {
+        const vcard = registrarEntity.vcardArray[1];
+        const fnField = vcard.find(function (f) { return f[0] === "fn"; });
+        if (fnField) info.registrar = fnField[3];
+      }
+
+      const registrationEvent = (rdapData.events || []).find(function (e) {
+        return e.eventAction === "registration";
+      });
+      if (registrationEvent) {
+        const createdDate = new Date(registrationEvent.eventDate);
+        info.created = createdDate.toLocaleDateString("en-US", {
+          year: "numeric", month: "long", day: "numeric"
+        });
+        const ageMs = Date.now() - createdDate.getTime();
+        info.age = Math.max(0, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000)));
+      }
+    }
+  } catch (e) {
+    console.error("RDAP lookup failed:", e.message);
+  }
+
+  return info;
 }
 
 const app = express();
@@ -160,6 +232,9 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
+    // ===== جيب بيانات النطاق الحقيقية =====
+    const domainInfo = await getDomainInfo(url);
+
     // إرسال النتائج للموقع
     res.json({
       url: url,
@@ -167,7 +242,8 @@ app.post("/api/check-link", async function (req, res) {
       suspicious: stats.suspicious,
       harmless: stats.harmless,
       undetected: stats.undetected,
-      engines: engines
+      engines: engines,
+      domainInfo: domainInfo
     });
 
   } catch (error) {
