@@ -3,6 +3,14 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
+function toUrlId(url) {
+  return Buffer.from(url)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
 const app = express();
 
 app.use(cors());
@@ -62,8 +70,6 @@ app.post("/api/check-link", async function (req, res) {
     const analysisId = scanData.data.id;
 
     // ===== انتظار حقيقي (polling) لحد ما التحليل يخلص فعليًا =====
-    // بدل ما نستنى 2 ثانية ثابتة وناخد نتيجة ناقصة، بنسأل VirusTotal
-    // كل 2 ثانية "خلصت ولا لسه؟" لحد ما يقول "completed"، أو لحد ما نوصل لأقصى محاولات.
     const MAX_ATTEMPTS = 10;     // أقصى عدد محاولات
     const POLL_INTERVAL = 2000;  // كل محاولة كل 2 ثانية => أقصى انتظار ~20 ثانية
     let resultData = null;
@@ -105,8 +111,45 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    const stats = resultData.data.attributes.stats;
-    const results = resultData.data.attributes.results;
+    // ===== نجيب التقرير الدائم للرابط (فيه كل المحركات بشكل كامل وأدق) =====
+    const urlId = toUrlId(url);
+    let urlReport = null;
+    let reportAttempts = 0;
+    const MIN_ENGINES = 60; // أغلب حسابات VT عندها ~70 محرك فحص
+
+    do {
+      const reportResponse = await fetch(
+        "https://www.virustotal.com/api/v3/urls/" + urlId,
+        {
+          headers: {
+            "x-apikey": process.env.VIRUSTOTAL_API_KEY
+          }
+        }
+      );
+
+      urlReport = await reportResponse.json();
+
+      if (!reportResponse.ok) {
+        return res.status(reportResponse.status).json({
+          error: "Could not get URL report",
+          details: urlReport
+        });
+      }
+
+      const resultsCount = Object.keys(
+        (urlReport.data && urlReport.data.attributes.last_analysis_results) || {}
+      ).length;
+
+      if (resultsCount >= MIN_ENGINES) break;
+
+      await new Promise(function (resolve) {
+        setTimeout(resolve, POLL_INTERVAL);
+      });
+      reportAttempts++;
+    } while (reportAttempts < 5);
+
+    const stats = urlReport.data.attributes.last_analysis_stats;
+    const results = urlReport.data.attributes.last_analysis_results;
 
     // أسماء برامج الحماية ونتائجها
     const engines = Object.values(results).map(function (engine) {
