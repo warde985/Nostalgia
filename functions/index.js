@@ -61,27 +61,47 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = scanData.data.id;
 
-    // انتظار التحليل
-    await new Promise(function (resolve) {
-      setTimeout(resolve, 2000);
-    });
+    // ===== انتظار حقيقي (polling) لحد ما التحليل يخلص فعليًا =====
+    // بدل ما نستنى 2 ثانية ثابتة وناخد نتيجة ناقصة، بنسأل VirusTotal
+    // كل 2 ثانية "خلصت ولا لسه؟" لحد ما يقول "completed"، أو لحد ما نوصل لأقصى محاولات.
+    const MAX_ATTEMPTS = 10;     // أقصى عدد محاولات
+    const POLL_INTERVAL = 2000;  // كل محاولة كل 2 ثانية => أقصى انتظار ~20 ثانية
+    let resultData = null;
 
-    // جلب نتيجة التحليل
-    const resultResponse = await fetch(
-      "https://www.virustotal.com/api/v3/analyses/" + analysisId,
-      {
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, POLL_INTERVAL);
+      });
+
+      const resultResponse = await fetch(
+        "https://www.virustotal.com/api/v3/analyses/" + analysisId,
+        {
+          headers: {
+            "x-apikey": process.env.VIRUSTOTAL_API_KEY
+          }
         }
+      );
+
+      resultData = await resultResponse.json();
+
+      if (!resultResponse.ok) {
+        return res.status(resultResponse.status).json({
+          error: "Could not get analysis result",
+          details: resultData
+        });
       }
-    );
 
-    const resultData = await resultResponse.json();
+      // لو التحليل خلص فعليًا، اخرج من حلقة الانتظار على طول
+      if (resultData.data && resultData.data.attributes.status === "completed") {
+        break;
+      }
+      // غير كده (لسه "queued" أو "in-progress")، هنكرر المحاولة تاني
+    }
 
-    if (!resultResponse.ok) {
-      return res.status(resultResponse.status).json({
-        error: "Could not get analysis result",
-        details: resultData
+    // لو بعد كل المحاولات التحليل لسه ماخلصش
+    if (!resultData || !resultData.data || resultData.data.attributes.status !== "completed") {
+      return res.status(202).json({
+        error: "التحليل لسه شغال، جرب تاني بعد شوية"
       });
     }
 
