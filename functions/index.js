@@ -2,86 +2,6 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const dns = require("dns").promises;
-
-function toUrlId(url) {
-  return Buffer.from(url)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-async function getDomainInfo(rawUrl) {
-  let hostname;
-  try {
-    hostname = new URL(rawUrl.startsWith("http") ? rawUrl : "https://" + rawUrl).hostname;
-  } catch (e) {
-    return null;
-  }
-
-  const info = {
-    ip: null,
-    country: null,
-    host: null,
-    registrar: null,
-    created: null,
-    age: null
-  };
-
-  // 1) IP حقيقي عن طريق DNS
-  try {
-    const dnsResult = await dns.lookup(hostname);
-    info.ip = dnsResult.address;
-  } catch (e) {
-    console.error("DNS lookup failed:", e.message);
-  }
-
-  // 2) بلد ومزود الاستضافة عن طريق الـ IP
-  if (info.ip) {
-    try {
-      const geoRes = await fetch(`https://ipapi.co/${info.ip}/json/`);
-      const geoData = await geoRes.json();
-      info.country = geoData.country_name || null;
-      info.host = geoData.org || null;
-    } catch (e) {
-      console.error("IP geolocation failed:", e.message);
-    }
-  }
-
-  // 3) جهة التسجيل وتاريخ الإنشاء عن طريق RDAP (بديل WHOIS الحديث)
-  try {
-    const rdapRes = await fetch(`https://rdap.org/domain/${hostname}`);
-    if (rdapRes.ok) {
-      const rdapData = await rdapRes.json();
-
-      const registrarEntity = (rdapData.entities || []).find(function (e) {
-        return (e.roles || []).includes("registrar");
-      });
-      if (registrarEntity && registrarEntity.vcardArray) {
-        const vcard = registrarEntity.vcardArray[1];
-        const fnField = vcard.find(function (f) { return f[0] === "fn"; });
-        if (fnField) info.registrar = fnField[3];
-      }
-
-      const registrationEvent = (rdapData.events || []).find(function (e) {
-        return e.eventAction === "registration";
-      });
-      if (registrationEvent) {
-        const createdDate = new Date(registrationEvent.eventDate);
-        info.created = createdDate.toLocaleDateString("en-US", {
-          year: "numeric", month: "long", day: "numeric"
-        });
-        const ageMs = Date.now() - createdDate.getTime();
-        info.age = Math.max(0, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000)));
-      }
-    }
-  } catch (e) {
-    console.error("RDAP lookup failed:", e.message);
-  }
-
-  return info;
-}
 
 const app = express();
 
@@ -142,8 +62,10 @@ app.post("/api/check-link", async function (req, res) {
     const analysisId = scanData.data.id;
 
     // ===== انتظار حقيقي (polling) لحد ما التحليل يخلص فعليًا =====
-    const MAX_ATTEMPTS = 10;     // أقصى عدد محاولات
-    const POLL_INTERVAL = 2000;  // كل محاولة كل 2 ثانية => أقصى انتظار ~20 ثانية
+    // بنسأل VirusTotal كل 2 ثانية "خلصت ولا لسه؟" لحد ما يقول status = "completed"،
+    // أو لحد ما نوصل لأقصى عدد محاولات (20 محاولة = أقصى انتظار ~40 ثانية، عادي يطول شوية).
+    const MAX_ATTEMPTS = 20;     // أقصى عدد محاولات
+    const POLL_INTERVAL = 2000;  // كل محاولة كل 2 ثانية
     let resultData = null;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -183,45 +105,10 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // ===== نجيب التقرير الدائم للرابط (فيه كل المحركات بشكل كامل وأدق) =====
-    const urlId = toUrlId(url);
-    let urlReport = null;
-    let reportAttempts = 0;
-    const MIN_ENGINES = 60; // أغلب حسابات VT عندها ~70 محرك فحص
-
-    do {
-      const reportResponse = await fetch(
-        "https://www.virustotal.com/api/v3/urls/" + urlId,
-        {
-          headers: {
-            "x-apikey": process.env.VIRUSTOTAL_API_KEY
-          }
-        }
-      );
-
-      urlReport = await reportResponse.json();
-
-      if (!reportResponse.ok) {
-        return res.status(reportResponse.status).json({
-          error: "Could not get URL report",
-          details: urlReport
-        });
-      }
-
-      const resultsCount = Object.keys(
-        (urlReport.data && urlReport.data.attributes.last_analysis_results) || {}
-      ).length;
-
-      if (resultsCount >= MIN_ENGINES) break;
-
-      await new Promise(function (resolve) {
-        setTimeout(resolve, POLL_INTERVAL);
-      });
-      reportAttempts++;
-    } while (reportAttempts < 5);
-
-    const stats = urlReport.data.attributes.last_analysis_stats;
-    const results = urlReport.data.attributes.last_analysis_results;
+    // ===== النتيجة دي أصلاً كاملة ودقيقة (VirusTotal بيحدد status = completed
+    // بس لما كل محركات الفحص تخلص)، مفيش داعي نجيب تقرير تاني من مكان تاني =====
+    const stats = resultData.data.attributes.stats;
+    const results = resultData.data.attributes.results;
 
     // أسماء برامج الحماية ونتائجها
     const engines = Object.values(results).map(function (engine) {
@@ -232,9 +119,6 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
-    // ===== جيب بيانات النطاق الحقيقية =====
-    const domainInfo = await getDomainInfo(url);
-
     // إرسال النتائج للموقع
     res.json({
       url: url,
@@ -242,8 +126,7 @@ app.post("/api/check-link", async function (req, res) {
       suspicious: stats.suspicious,
       harmless: stats.harmless,
       undetected: stats.undetected,
-      engines: engines,
-      domainInfo: domainInfo
+      engines: engines
     });
 
   } catch (error) {
