@@ -2,8 +2,13 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 
 const app = express();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 32 * 1024 * 1024 } // 32MB - أقصى حجم مسموح به من VirusTotal (الخطة المجانية)
+});
 
 app.use(cors());
 app.use(express.json());
@@ -19,11 +24,6 @@ app.get("/api/test", function (req, res) {
   res.json({ message: "API is working!" });
 });
 
-/**
- * الخطوة 1: إرسال الرابط لـ VirusTotal.
- * بيرجع فورًا (خلال أقل من ثانية عادةً) بمجرد ما VT يستلم الرابط ويبدأ الفحص
- * في الخلفية عنده. مفيش أي انتظار هنا، فمستحيل يحصل timeout من Vercel.
- */
 app.post("/api/submit-scan", async function (req, res) {
   try {
     const url = req.body.url;
@@ -68,13 +68,50 @@ app.post("/api/submit-scan", async function (req, res) {
   }
 });
 
-/**
- * الخطوة 2: التحقق من حالة التحليل.
- * الفرونت إند بينادي على الـ endpoint ده كل 3 ثواني تقريبًا لحد ما status = "completed".
- * كل نداء هنا سريع جدًا (أقل من ثانية) - ده اللي بيحل مشكلة الـ timeout.
- * وأهم حاجة: بيتأكد فعليًا إن الحالة "completed" قبل ما يرجع نتيجة،
- * فمش هترجعلك نتيجة ناقصة زي ما كان بيحصل قبل كده.
- */
+app.post("/api/submit-file-scan", upload.single("file"), async function (req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "من فضلك اختر ملف للفحص" });
+    }
+
+    if (!VT_API_KEY) {
+      return res.status(500).json({ error: "VirusTotal API key is not configured" });
+    }
+
+    const formData = new FormData();
+    const blob = new Blob([req.file.buffer], { type: req.file.mimetype || "application/octet-stream" });
+    formData.append("file", blob, req.file.originalname);
+
+    const uploadResponse = await fetch(VT_BASE + "/files", {
+      method: "POST",
+      headers: {
+        "x-apikey": VT_API_KEY
+      },
+      body: formData
+    });
+
+    const uploadData = await uploadResponse.json();
+
+    if (!uploadResponse.ok) {
+      return res.status(uploadResponse.status).json({
+        error: "VirusTotal error",
+        details: uploadData
+      });
+    }
+
+    res.json({
+      analysisId: uploadData.data.id,
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      fileType: req.file.mimetype
+    });
+
+  } catch (error) {
+    console.error("Submit-file-scan error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء رفع الملف للفحص" });
+  }
+});
+
 app.get("/api/scan-status/:analysisId", async function (req, res) {
   try {
     if (!VT_API_KEY) {
@@ -103,12 +140,10 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
 
     const status = resultData.data.attributes.status;
 
-    // ===== لسه شغال - رجّع الحالة بس، من غير نتيجة ناقصة =====
     if (status !== "completed") {
       return res.json({ status: status });
     }
 
-    // ===== خلص فعليًا - دلوقتي بس نرجّع النتيجة الكاملة والدقيقة =====
     const stats = resultData.data.attributes.stats || {};
     const results = resultData.data.attributes.results || {};
 
@@ -120,9 +155,13 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
       };
     });
 
+    const fileInfo = resultData.meta && resultData.meta.file_info ? resultData.meta.file_info : null;
+
     res.json({
       status: "completed",
       url: resultData.meta && resultData.meta.url_info ? resultData.meta.url_info.url : undefined,
+      sha256: fileInfo ? fileInfo.sha256 : undefined,
+      md5: fileInfo ? fileInfo.md5 : undefined,
       malicious: stats.malicious || 0,
       suspicious: stats.suspicious || 0,
       harmless: stats.harmless || 0,
