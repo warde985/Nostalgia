@@ -8,46 +8,45 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const VT_API_KEY = process.env.VIRUSTOTAL_API_KEY;
+const VT_BASE = "https://www.virustotal.com/api/v3";
+
 app.get("/", function (req, res) {
   res.send("Server is running!");
 });
 
 app.get("/api/test", function (req, res) {
-  res.json({
-    message: "API is working!"
-  });
+  res.json({ message: "API is working!" });
 });
 
-app.post("/api/check-link", async function (req, res) {
+/**
+ * الخطوة 1: إرسال الرابط لـ VirusTotal.
+ * بيرجع فورًا (خلال أقل من ثانية عادةً) بمجرد ما VT يستلم الرابط ويبدأ الفحص
+ * في الخلفية عنده. مفيش أي انتظار هنا، فمستحيل يحصل timeout من Vercel.
+ */
+app.post("/api/submit-scan", async function (req, res) {
   try {
     const url = req.body.url;
 
     if (!url) {
-      return res.status(400).json({
-        error: "من فضلك أدخل رابط"
-      });
+      return res.status(400).json({ error: "من فضلك أدخل رابط" });
     }
 
-    if (!process.env.VIRUSTOTAL_API_KEY) {
-      return res.status(500).json({
-        error: "VirusTotal API key is not configured"
-      });
+    if (!VT_API_KEY) {
+      return res.status(500).json({ error: "VirusTotal API key is not configured" });
     }
 
     const formData = new URLSearchParams();
     formData.append("url", url);
 
-    const scanResponse = await fetch(
-      "https://www.virustotal.com/api/v3/urls",
-      {
-        method: "POST",
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData
-      }
-    );
+    const scanResponse = await fetch(VT_BASE + "/urls", {
+      method: "POST",
+      headers: {
+        "x-apikey": VT_API_KEY,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: formData
+    });
 
     const scanData = await scanResponse.json();
 
@@ -58,30 +57,58 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    const analysisId = scanData.data.id;
-
-    await new Promise(function (resolve) {
-      setTimeout(resolve, 2000);
+    res.json({
+      analysisId: scanData.data.id,
+      url: url
     });
 
-    const resultResponse = await fetch(
-      "https://www.virustotal.com/api/v3/analyses/" + analysisId,
-      {
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY
-        }
-      }
-    );
+  } catch (error) {
+    console.error("Submit-scan error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء إرسال الرابط للفحص" });
+  }
+});
+
+/**
+ * الخطوة 2: التحقق من حالة التحليل.
+ * الفرونت إند بينادي على الـ endpoint ده كل 3 ثواني تقريبًا لحد ما status = "completed".
+ * كل نداء هنا سريع جدًا (أقل من ثانية) - ده اللي بيحل مشكلة الـ timeout.
+ * وأهم حاجة: بيتأكد فعليًا إن الحالة "completed" قبل ما يرجع نتيجة،
+ * فمش هترجعلك نتيجة ناقصة زي ما كان بيحصل قبل كده.
+ */
+app.get("/api/scan-status/:analysisId", async function (req, res) {
+  try {
+    if (!VT_API_KEY) {
+      return res.status(500).json({ error: "VirusTotal API key is not configured" });
+    }
+
+    const analysisId = req.params.analysisId;
+
+    const resultResponse = await fetch(VT_BASE + "/analyses/" + analysisId, {
+      headers: { "x-apikey": VT_API_KEY }
+    });
 
     const resultData = await resultResponse.json();
 
     if (!resultResponse.ok) {
+      if (resultResponse.status === 429) {
+        return res.status(429).json({
+          error: "تم تجاوز الحد المسموح من الطلبات، حاول تاني بعد شوية"
+        });
+      }
       return res.status(resultResponse.status).json({
         error: "Could not get analysis result",
         details: resultData
       });
     }
 
+    const status = resultData.data.attributes.status;
+
+    // ===== لسه شغال - رجّع الحالة بس، من غير نتيجة ناقصة =====
+    if (status !== "completed") {
+      return res.json({ status: status });
+    }
+
+    // ===== خلص فعليًا - دلوقتي بس نرجّع النتيجة الكاملة والدقيقة =====
     const stats = resultData.data.attributes.stats || {};
     const results = resultData.data.attributes.results || {};
 
@@ -94,7 +121,8 @@ app.post("/api/check-link", async function (req, res) {
     });
 
     res.json({
-      url: url,
+      status: "completed",
+      url: resultData.meta && resultData.meta.url_info ? resultData.meta.url_info.url : undefined,
       malicious: stats.malicious || 0,
       suspicious: stats.suspicious || 0,
       harmless: stats.harmless || 0,
@@ -103,103 +131,8 @@ app.post("/api/check-link", async function (req, res) {
     });
 
   } catch (error) {
-    console.error("Check-link error:", error);
-
-    res.status(500).json({
-      error: "حدث خطأ أثناء الفحص"
-    });
-  }
-});
-
-app.post("/api/check-url", async function (req, res) {
-  try {
-    const url = req.body.url;
-
-    if (!url) {
-      return res.status(400).json({
-        error: "URL is required"
-      });
-    }
-
-    if (!process.env.VIRUSTOTAL_API_KEY) {
-      return res.status(500).json({
-        error: "VirusTotal API key is not configured"
-      });
-    }
-
-    const submitResponse = await fetch(
-      "https://www.virustotal.com/api/v3/urls",
-      {
-        method: "POST",
-        headers: {
-          "x-apikey": process.env.VIRUSTOTAL_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-          url: url
-        })
-      }
-    );
-
-    const submitData = await submitResponse.json();
-
-    if (!submitResponse.ok) {
-      return res.status(submitResponse.status).json(submitData);
-    }
-
-    const analysisId = submitData.data.id;
-
-    let analysis = null;
-
-    for (let i = 0; i < 10; i++) {
-      await new Promise(function (resolve) {
-        setTimeout(resolve, 2000);
-      });
-
-      const resultResponse = await fetch(
-        "https://www.virustotal.com/api/v3/analyses/" + analysisId,
-        {
-          headers: {
-            "x-apikey": process.env.VIRUSTOTAL_API_KEY
-          }
-        }
-      );
-
-      analysis = await resultResponse.json();
-
-      if (
-        analysis.data &&
-        analysis.data.attributes &&
-        analysis.data.attributes.status === "completed"
-      ) {
-        break;
-      }
-    }
-
-    if (
-      !analysis ||
-      !analysis.data ||
-      !analysis.data.attributes
-    ) {
-      return res.status(500).json({
-        error: "Could not retrieve VirusTotal analysis"
-      });
-    }
-
-    const stats = analysis.data.attributes.stats || {};
-    const results = analysis.data.attributes.results || {};
-
-    res.json({
-      stats: stats,
-      results: results
-    });
-
-  } catch (error) {
-    console.error("Check-url error:", error);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    console.error("Scan-status error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء التحقق من نتيجة الفحص" });
   }
 });
 
