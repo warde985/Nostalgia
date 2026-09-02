@@ -7,7 +7,7 @@ const multer = require("multer");
 const app = express();
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 32 * 1024 * 1024 }
+  limits: { fileSize: 32 * 1024 * 1024 } // 32MB - VirusTotal free plan limit
 });
 
 app.use(cors());
@@ -21,7 +21,7 @@ function sleep(ms) {
 }
 
 // ============================================================
-// دالة مساعدة لجلب معلومات النطاق من APIs خارجية (حقيقية)
+// Helper function to get real domain information from external APIs
 // ============================================================
 async function getDomainInfo(domain) {
   const info = {
@@ -34,7 +34,7 @@ async function getDomainInfo(domain) {
   };
 
   try {
-    // 1) جيب الـ IP بتاع النطاق من Google DNS
+    // 1) Get domain IP from Google DNS
     const ipResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
     const ipData = await ipResponse.json();
     const ip = ipData.Answer && ipData.Answer[0] ? ipData.Answer[0].data : null;
@@ -42,7 +42,7 @@ async function getDomainInfo(domain) {
     if (ip) {
       info.ip = ip;
 
-      // 2) جيب معلومات الـ IP من ip-api.com (البلد - المزود)
+      // 2) Get IP information from ip-api.com (country, ISP)
       const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,isp`);
       const geoData = await geoResponse.json();
       
@@ -54,15 +54,21 @@ async function getDomainInfo(domain) {
   }
 
   try {
-    // 3) جيب معلومات Whois من whois.vu
+    // 3) Get Whois information from whois.vu
     const whoisResponse = await fetch(`https://api.whois.vu/?q=${domain}`);
     const whoisData = await whoisResponse.json();
     
     if (whoisData.registrar) info.registrar = whoisData.registrar;
     if (whoisData.created) {
-      // حول التاريخ لصيغة مفهومة
       const date = new Date(whoisData.created);
-      info.created = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+      // Only show if date is real (not 1970 default)
+      if (date.getFullYear() > 2000) {
+        info.created = date.toLocaleDateString('ar-EG', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
     }
   } catch (error) {
     console.error("Error fetching WHOIS info:", error);
@@ -84,7 +90,7 @@ app.get("/api/test", function (req, res) {
 });
 
 // ============================================================
-// فحص الروابط - نسخة "كل حاجة في طلب واحد"
+// URL Scanner - One route that submits and returns full results
 // ============================================================
 app.post("/api/check-link", async function (req, res) {
   try {
@@ -98,7 +104,7 @@ app.post("/api/check-link", async function (req, res) {
       return res.status(500).json({ error: "VirusTotal API key is not configured" });
     }
 
-    // 1) SUBMIT: بعت الرابط لـ VirusTotal
+    // 1) SUBMIT: Send URL to VirusTotal
     const formData = new URLSearchParams();
     formData.append("url", url);
 
@@ -122,9 +128,9 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = submitData.data.id;
 
-    // 2) POLL: كرر السؤال لحد ما الفحص يخلص
+    // 2) POLL: Keep checking until scan is complete
     const MAX_ATTEMPTS = 15;
-    const POLL_INTERVAL = 3000;
+    const POLL_INTERVAL = 3000; // 3 seconds
 
     let resultData = null;
 
@@ -160,7 +166,7 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // 3) استخرج اسم النطاق من الرابط
+    // 3) Extract domain from URL
     let domain = url;
     try {
       domain = new URL(url).hostname;
@@ -168,10 +174,10 @@ app.post("/api/check-link", async function (req, res) {
       domain = url.split('/')[0];
     }
 
-    // 4) جيب معلومات النطاق الحقيقية
+    // 4) Get real domain information
     const domainInfo = await getDomainInfo(domain);
 
-    // 5) رجّع النتيجة النهائية مع معلومات النطاق
+    // 5) Return final result with domain info
     const stats = resultData.data.attributes.stats || {};
     const results = resultData.data.attributes.results || {};
 
@@ -183,7 +189,7 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
-    // حساب درجة السمعة بناءً على النتيجة
+    // Calculate reputation based on results
     let reputation = "جيدة";
     const malicious = stats.malicious || 0;
     const suspicious = stats.suspicious || 0;
@@ -211,7 +217,7 @@ app.post("/api/check-link", async function (req, res) {
 });
 
 // ============================================================
-// فحص الملفات
+// File Scanner - Upload file to VirusTotal
 // ============================================================
 app.post("/api/submit-file-scan", upload.single("file"), async function (req, res) {
   try {
@@ -257,6 +263,9 @@ app.post("/api/submit-file-scan", upload.single("file"), async function (req, re
   }
 });
 
+// ============================================================
+// Check file scan status
+// ============================================================
 app.get("/api/scan-status/:analysisId", async function (req, res) {
   try {
     if (!VT_API_KEY) {
