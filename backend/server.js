@@ -7,7 +7,7 @@ const multer = require("multer");
 const app = express();
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 32 * 1024 * 1024 } // 32MB - أقصى حجم مسموح به من VirusTotal (الخطة المجانية)
+  limits: { fileSize: 32 * 1024 * 1024 }
 });
 
 app.use(cors());
@@ -16,10 +16,64 @@ app.use(express.json());
 const VT_API_KEY = process.env.VIRUSTOTAL_API_KEY;
 const VT_BASE = "https://www.virustotal.com/api/v3";
 
-// دالة مساعدة تستنى شوية وقت بين كل محاولة فحص
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// ============================================================
+// دالة مساعدة لجلب معلومات النطاق من APIs خارجية (حقيقية)
+// ============================================================
+async function getDomainInfo(domain) {
+  const info = {
+    registrar: "غير معروف",
+    created: "غير معروف",
+    country: "غير معروف",
+    ip: "غير معروف",
+    host: "غير معروف",
+    reputation: "غير معروفة"
+  };
+
+  try {
+    // 1) جيب الـ IP بتاع النطاق من Google DNS
+    const ipResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
+    const ipData = await ipResponse.json();
+    const ip = ipData.Answer && ipData.Answer[0] ? ipData.Answer[0].data : null;
+    
+    if (ip) {
+      info.ip = ip;
+
+      // 2) جيب معلومات الـ IP من ip-api.com (البلد - المزود)
+      const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,isp`);
+      const geoData = await geoResponse.json();
+      
+      if (geoData.country) info.country = geoData.country;
+      if (geoData.isp) info.host = geoData.isp;
+    }
+  } catch (error) {
+    console.error("Error fetching IP info:", error);
+  }
+
+  try {
+    // 3) جيب معلومات Whois من whois.vu
+    const whoisResponse = await fetch(`https://api.whois.vu/?q=${domain}`);
+    const whoisData = await whoisResponse.json();
+    
+    if (whoisData.registrar) info.registrar = whoisData.registrar;
+    if (whoisData.created) {
+      // حول التاريخ لصيغة مفهومة
+      const date = new Date(whoisData.created);
+      info.created = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  } catch (error) {
+    console.error("Error fetching WHOIS info:", error);
+  }
+
+  return info;
+}
+
+// ============================================================
+// Routes
+// ============================================================
 
 app.get("/", function (req, res) {
   res.send("Server is running!");
@@ -30,56 +84,7 @@ app.get("/api/test", function (req, res) {
 });
 
 // ============================================================
-// فحص الروابط - نسخة async (تستخدمها صفحة url-scanner.html القديمة
-// اللي بتنتظر analysisId وتعمل polling بنفسها لو احتجتيها لاحقًا)
-// ============================================================
-app.post("/api/submit-scan", async function (req, res) {
-  try {
-    const url = req.body.url;
-
-    if (!url) {
-      return res.status(400).json({ error: "من فضلك أدخل رابط" });
-    }
-
-    if (!VT_API_KEY) {
-      return res.status(500).json({ error: "VirusTotal API key is not configured" });
-    }
-
-    const formData = new URLSearchParams();
-    formData.append("url", url);
-
-    const scanResponse = await fetch(VT_BASE + "/urls", {
-      method: "POST",
-      headers: {
-        "x-apikey": VT_API_KEY,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: formData
-    });
-
-    const scanData = await scanResponse.json();
-
-    if (!scanResponse.ok) {
-      return res.status(scanResponse.status).json({
-        error: "VirusTotal error",
-        details: scanData
-      });
-    }
-
-    res.json({
-      analysisId: scanData.data.id,
-      url: url
-    });
-
-  } catch (error) {
-    console.error("Submit-scan error:", error);
-    res.status(500).json({ error: "حدث خطأ أثناء إرسال الرابط للفحص" });
-  }
-});
-
-// ============================================================
-// فحص الروابط - نسخة "كل حاجة في طلب واحد" (submit + poll + نتيجة)
-// دي اللي بينادي عليها url-scanner.html في الكود الحالي (runScan)
+// فحص الروابط - نسخة "كل حاجة في طلب واحد"
 // ============================================================
 app.post("/api/check-link", async function (req, res) {
   try {
@@ -119,7 +124,7 @@ app.post("/api/check-link", async function (req, res) {
 
     // 2) POLL: كرر السؤال لحد ما الفحص يخلص
     const MAX_ATTEMPTS = 15;
-    const POLL_INTERVAL = 3000; // 3 ثواني بين كل محاولة
+    const POLL_INTERVAL = 3000;
 
     let resultData = null;
 
@@ -155,7 +160,18 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // 3) رجّع النتيجة النهائية جاهزة على شكل واحد
+    // 3) استخرج اسم النطاق من الرابط
+    let domain = url;
+    try {
+      domain = new URL(url).hostname;
+    } catch (e) {
+      domain = url.split('/')[0];
+    }
+
+    // 4) جيب معلومات النطاق الحقيقية
+    const domainInfo = await getDomainInfo(domain);
+
+    // 5) رجّع النتيجة النهائية مع معلومات النطاق
     const stats = resultData.data.attributes.stats || {};
     const results = resultData.data.attributes.results || {};
 
@@ -167,13 +183,25 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
+    // حساب درجة السمعة بناءً على النتيجة
+    let reputation = "جيدة";
+    const malicious = stats.malicious || 0;
+    const suspicious = stats.suspicious || 0;
+    if (malicious > 0) {
+      reputation = "سيئة";
+    } else if (suspicious > 0) {
+      reputation = "متوسطة";
+    }
+    domainInfo.reputation = reputation;
+
     res.json({
       url: url,
       malicious: stats.malicious || 0,
       suspicious: stats.suspicious || 0,
       harmless: stats.harmless || 0,
       undetected: stats.undetected || 0,
-      engines: engines
+      engines: engines,
+      domainInfo: domainInfo
     });
 
   } catch (error) {
@@ -276,7 +304,6 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
 
     res.json({
       status: "completed",
-      url: resultData.meta && resultData.meta.url_info ? resultData.meta.url_info.url : undefined,
       sha256: fileInfo ? fileInfo.sha256 : undefined,
       md5: fileInfo ? fileInfo.md5 : undefined,
       malicious: stats.malicious || 0,
