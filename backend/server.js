@@ -25,12 +25,12 @@ function sleep(ms) {
 // ============================================================
 async function getDomainInfo(domain) {
   const info = {
-    registrar: "غير معروف",
-    created: "غير معروف",
-    country: "غير معروف",
-    ip: "غير معروف",
-    host: "غير معروف",
-    reputation: "غير معروفة"
+    registrar: null,
+    created: null,
+    country: null,
+    ip: null,
+    host: null,
+    reputation: null // 'good' | 'medium' | 'bad' | null - the frontend translates this
   };
 
   try {
@@ -38,14 +38,14 @@ async function getDomainInfo(domain) {
     const ipResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
     const ipData = await ipResponse.json();
     const ip = ipData.Answer && ipData.Answer[0] ? ipData.Answer[0].data : null;
-    
+
     if (ip) {
       info.ip = ip;
 
       // 2) Get IP information from ip-api.com (country, ISP)
       const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,isp`);
       const geoData = await geoResponse.json();
-      
+
       if (geoData.country) info.country = geoData.country;
       if (geoData.isp) info.host = geoData.isp;
     }
@@ -57,17 +57,14 @@ async function getDomainInfo(domain) {
     // 3) Get Whois information from whois.vu
     const whoisResponse = await fetch(`https://api.whois.vu/?q=${domain}`);
     const whoisData = await whoisResponse.json();
-    
+
     if (whoisData.registrar) info.registrar = whoisData.registrar;
     if (whoisData.created) {
       const date = new Date(whoisData.created);
       // Only show if date is real (not 1970 default)
       if (date.getFullYear() > 2000) {
-        info.created = date.toLocaleDateString('ar-EG', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
+        // ISO format so the frontend can format it per the active language
+        info.created = date.toISOString().split("T")[0]; // "2022-03-15"
       }
     }
   } catch (error) {
@@ -171,7 +168,7 @@ app.post("/api/check-link", async function (req, res) {
     try {
       domain = new URL(url).hostname;
     } catch (e) {
-      domain = url.split('/')[0];
+      domain = url.split("/")[0];
     }
 
     // 4) Get real domain information
@@ -189,14 +186,15 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
-    // Calculate reputation based on results
-    let reputation = "جيدة";
+    // Calculate reputation based on results (neutral English codes -
+    // the frontend maps these to the current language)
+    let reputation = "good";
     const malicious = stats.malicious || 0;
     const suspicious = stats.suspicious || 0;
     if (malicious > 0) {
-      reputation = "سيئة";
+      reputation = "bad";
     } else if (suspicious > 0) {
-      reputation = "متوسطة";
+      reputation = "medium";
     }
     domainInfo.reputation = reputation;
 
