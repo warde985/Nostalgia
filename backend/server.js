@@ -7,7 +7,7 @@ const multer = require("multer");
 const app = express();
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 32 * 1024 * 1024 } // 32MB - VirusTotal free plan limit
+  limits: { fileSize: 32 * 1024 * 1024 } // 32MB
 });
 
 app.use(cors());
@@ -21,7 +21,7 @@ function sleep(ms) {
 }
 
 // ============================================================
-// Helper function to get real domain information from external APIs
+// Get real domain information
 // ============================================================
 async function getDomainInfo(domain) {
   const info = {
@@ -30,11 +30,44 @@ async function getDomainInfo(domain) {
     country: null,
     ip: null,
     host: null,
-    reputation: null // 'good' | 'medium' | 'bad' | null - the frontend translates this
+    reputation: null
+  };
+
+  // Country translation
+  const countryMap = {
+    'United States': 'الولايات المتحدة',
+    'Canada': 'كندا',
+    'United Kingdom': 'المملكة المتحدة',
+    'Egypt': 'مصر',
+    'Saudi Arabia': 'السعودية',
+    'UAE': 'الإمارات',
+    'Germany': 'ألمانيا',
+    'France': 'فرنسا',
+    'Australia': 'أستراليا',
+    'India': 'الهند',
+    'Japan': 'اليابان',
+    'China': 'الصين',
+    'Russia': 'روسيا',
+    'Brazil': 'البرازيل',
+    'South Africa': 'جنوب أفريقيا'
+  };
+
+  // Host translation
+  const hostMap = {
+    'Cloudflare, Inc.': 'كلاودفلير',
+    'Amazon.com, Inc.': 'أمازون',
+    'Google LLC': 'جوجل',
+    'Microsoft Corporation': 'مايكروسوفت',
+    'DigitalOcean, LLC': 'ديجيتال أوشن',
+    'Linode, LLC': 'لاينود',
+    'Vultr Holdings, LLC': 'فولتر',
+    'OVH SAS': 'أو في إتش',
+    'Hetzner Online GmbH': 'هيتزنر',
+    'Namecheap, Inc.': 'نيمشيب'
   };
 
   try {
-    // 1) Get domain IP from Google DNS
+    // 1) Get IP from Google DNS
     const ipResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
     const ipData = await ipResponse.json();
     const ip = ipData.Answer && ipData.Answer[0] ? ipData.Answer[0].data : null;
@@ -42,29 +75,33 @@ async function getDomainInfo(domain) {
     if (ip) {
       info.ip = ip;
 
-      // 2) Get IP information from ip-api.com (country, ISP)
+      // 2) Get IP info from ip-api.com
       const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,isp`);
       const geoData = await geoResponse.json();
 
-      if (geoData.country) info.country = geoData.country;
-      if (geoData.isp) info.host = geoData.isp;
+      if (geoData.country) {
+        info.country = countryMap[geoData.country] || geoData.country;
+      }
+      if (geoData.isp) {
+        info.host = hostMap[geoData.isp] || geoData.isp;
+      }
     }
   } catch (error) {
     console.error("Error fetching IP info:", error);
   }
 
   try {
-    // 3) Get Whois information from whois.vu
+    // 3) Get Whois from whois.vu
     const whoisResponse = await fetch(`https://api.whois.vu/?q=${domain}`);
     const whoisData = await whoisResponse.json();
 
-    if (whoisData.registrar) info.registrar = whoisData.registrar;
+    if (whoisData.registrar) {
+      info.registrar = hostMap[whoisData.registrar] || whoisData.registrar;
+    }
     if (whoisData.created) {
       const date = new Date(whoisData.created);
-      // Only show if date is real (not 1970 default)
       if (date.getFullYear() > 2000) {
-        // ISO format so the frontend can format it per the active language
-        info.created = date.toISOString().split("T")[0]; // "2022-03-15"
+        info.created = date.toISOString().split("T")[0];
       }
     }
   } catch (error) {
@@ -87,7 +124,7 @@ app.get("/api/test", function (req, res) {
 });
 
 // ============================================================
-// URL Scanner - One route that submits and returns full results
+// URL Scanner
 // ============================================================
 app.post("/api/check-link", async function (req, res) {
   try {
@@ -101,7 +138,7 @@ app.post("/api/check-link", async function (req, res) {
       return res.status(500).json({ error: "VirusTotal API key is not configured" });
     }
 
-    // 1) SUBMIT: Send URL to VirusTotal
+    // 1) SUBMIT to VirusTotal
     const formData = new URLSearchParams();
     formData.append("url", url);
 
@@ -125,9 +162,9 @@ app.post("/api/check-link", async function (req, res) {
 
     const analysisId = submitData.data.id;
 
-    // 2) POLL: Keep checking until scan is complete
-    const MAX_ATTEMPTS = 15;
-    const POLL_INTERVAL = 3000; // 3 seconds
+    // 2) POLL: wait for completion
+    const MAX_ATTEMPTS = 30;
+    const POLL_INTERVAL = 2000;
 
     let resultData = null;
 
@@ -163,7 +200,7 @@ app.post("/api/check-link", async function (req, res) {
       });
     }
 
-    // 3) Extract domain from URL
+    // 3) Extract domain
     let domain = url;
     try {
       domain = new URL(url).hostname;
@@ -171,10 +208,10 @@ app.post("/api/check-link", async function (req, res) {
       domain = url.split("/")[0];
     }
 
-    // 4) Get real domain information
+    // 4) Get domain info
     const domainInfo = await getDomainInfo(domain);
 
-    // 5) Return final result with domain info
+    // 5) Return results
     const stats = resultData.data.attributes.stats || {};
     const results = resultData.data.attributes.results || {};
 
@@ -186,8 +223,6 @@ app.post("/api/check-link", async function (req, res) {
       };
     });
 
-    // Calculate reputation based on results (neutral English codes -
-    // the frontend maps these to the current language)
     let reputation = "good";
     const malicious = stats.malicious || 0;
     const suspicious = stats.suspicious || 0;
@@ -215,7 +250,7 @@ app.post("/api/check-link", async function (req, res) {
 });
 
 // ============================================================
-// File Scanner - Upload file to VirusTotal
+// File Scanner - Upload
 // ============================================================
 app.post("/api/submit-file-scan", upload.single("file"), async function (req, res) {
   try {
@@ -262,7 +297,7 @@ app.post("/api/submit-file-scan", upload.single("file"), async function (req, re
 });
 
 // ============================================================
-// Check file scan status
+// File Scanner - Check Status
 // ============================================================
 app.get("/api/scan-status/:analysisId", async function (req, res) {
   try {
@@ -324,6 +359,18 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
     console.error("Scan-status error:", error);
     res.status(500).json({ error: "حدث خطأ أثناء التحقق من نتيجة الفحص" });
   }
+});
+
+// ============================================================
+// Start Server
+// ============================================================
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, function () {
+  console.log("🚀 Server running on http://localhost:" + PORT);
+  console.log("📡 Test: http://localhost:" + PORT + "/api/test");
+  console.log("📡 Check link: http://localhost:" + PORT + "/api/check-link");
+  console.log("📡 File scan: http://localhost:" + PORT + "/api/submit-file-scan");
 });
 
 module.exports = app;
