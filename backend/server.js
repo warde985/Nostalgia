@@ -16,52 +16,37 @@ app.use(express.json());
 const VT_API_KEY = process.env.VIRUSTOTAL_API_KEY;
 const VT_BASE = "https://www.virustotal.com/api/v3";
 
-// ============================================================
-// خريطة ترجمة أسماء الدول (من كود ISO للدولة لاسمها بالعربي)
-// ============================================================
-const COUNTRY_NAMES_AR = {
-  US: "الولايات المتحدة", GB: "المملكة المتحدة", DE: "ألمانيا", FR: "فرنسا",
-  NL: "هولندا", CA: "كندا", AU: "أستراليا", JP: "اليابان", CN: "الصين",
-  IN: "الهند", BR: "البرازيل", RU: "روسيا", SG: "سنغافورة", IE: "أيرلندا",
-  SE: "السويد", CH: "سويسرا", IT: "إيطاليا", ES: "إسبانيا", PL: "بولندا",
-  FI: "فنلندا", NO: "النرويج", DK: "الدنمارك", BE: "بلجيكا", AT: "النمسا",
-  KR: "كوريا الجنوبية", HK: "هونج كونج", TW: "تايوان", ZA: "جنوب أفريقيا",
-  AE: "الإمارات العربية المتحدة", SA: "السعودية", EG: "مصر", TR: "تركيا",
-  IL: "إسرائيل", MX: "المكسيك", AR: "الأرجنتين", ID: "إندونيسيا",
-  VN: "فيتنام", TH: "تايلاند", MY: "ماليزيا", PH: "الفلبين", PK: "باكستان",
-  UA: "أوكرانيا", RO: "رومانيا", CZ: "التشيك", PT: "البرتغال", GR: "اليونان",
-  HU: "المجر", IS: "آيسلندا", LU: "لوكسمبورج", NZ: "نيوزيلندا", CL: "تشيلي"
-};
-
-function translateCountry(countryCode, fallbackName) {
-  if (countryCode && COUNTRY_NAMES_AR[countryCode]) return COUNTRY_NAMES_AR[countryCode];
-  return fallbackName || "غير معروف";
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ============================================================
-// جلب معلومات النطاق الحقيقية - بيتنفذ مرة واحدة بس بعد ما
-// الفحص يخلص فعليًا (status === "completed")
+// Helper function to get real domain information from external APIs
 // ============================================================
 async function getDomainInfo(domain) {
   const info = {
-    registrar: "غير معروف",
-    created: "غير معروف",
-    country: "غير معروف",
-    ip: "غير معروف",
-    host: "غير معروف",
-    reputation: "غير معروفة"
+    registrar: null,
+    created: null,
+    country: null,
+    ip: null,
+    host: null,
+    reputation: null // 'good' | 'medium' | 'bad' | null - the frontend translates this
   };
 
   try {
+    // 1) Get domain IP from Google DNS
     const ipResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
     const ipData = await ipResponse.json();
     const ip = ipData.Answer && ipData.Answer[0] ? ipData.Answer[0].data : null;
 
     if (ip) {
       info.ip = ip;
-      const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,countryCode,isp`);
+
+      // 2) Get IP information from ip-api.com (country, ISP)
+      const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,isp`);
       const geoData = await geoResponse.json();
-      if (geoData.country) info.country = translateCountry(geoData.countryCode, geoData.country);
+
+      if (geoData.country) info.country = geoData.country;
       if (geoData.isp) info.host = geoData.isp;
     }
   } catch (error) {
@@ -69,13 +54,17 @@ async function getDomainInfo(domain) {
   }
 
   try {
+    // 3) Get Whois information from whois.vu
     const whoisResponse = await fetch(`https://api.whois.vu/?q=${domain}`);
     const whoisData = await whoisResponse.json();
+
     if (whoisData.registrar) info.registrar = whoisData.registrar;
     if (whoisData.created) {
       const date = new Date(whoisData.created);
+      // Only show if date is real (not 1970 default)
       if (date.getFullYear() > 2000) {
-        info.created = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+        // ISO format so the frontend can format it per the active language
+        info.created = date.toISOString().split("T")[0]; // "2022-03-15"
       }
     }
   } catch (error) {
@@ -84,6 +73,10 @@ async function getDomainInfo(domain) {
 
   return info;
 }
+
+// ============================================================
+// Routes
+// ============================================================
 
 app.get("/", function (req, res) {
   res.send("Server is running!");
@@ -94,23 +87,25 @@ app.get("/api/test", function (req, res) {
 });
 
 // ============================================================
-// فحص الروابط - الخطوة 1: إرسال الرابط فقط (سريع جدًا، بلا انتظار)
+// URL Scanner - One route that submits and returns full results
 // ============================================================
-app.post("/api/submit-scan", async function (req, res) {
+app.post("/api/check-link", async function (req, res) {
   try {
     const url = req.body.url;
 
     if (!url) {
       return res.status(400).json({ error: "من فضلك أدخل رابط" });
     }
+
     if (!VT_API_KEY) {
       return res.status(500).json({ error: "VirusTotal API key is not configured" });
     }
 
+    // 1) SUBMIT: Send URL to VirusTotal
     const formData = new URLSearchParams();
     formData.append("url", url);
 
-    const scanResponse = await fetch(VT_BASE + "/urls", {
+    const submitResponse = await fetch(VT_BASE + "/urls", {
       method: "POST",
       headers: {
         "x-apikey": VT_API_KEY,
@@ -119,28 +114,115 @@ app.post("/api/submit-scan", async function (req, res) {
       body: formData
     });
 
-    const scanData = await scanResponse.json();
+    const submitData = await submitResponse.json();
 
-    if (!scanResponse.ok) {
-      return res.status(scanResponse.status).json({ error: "VirusTotal error", details: scanData });
+    if (!submitResponse.ok) {
+      return res.status(submitResponse.status).json({
+        error: "VirusTotal error",
+        details: submitData
+      });
     }
 
-    res.json({ analysisId: scanData.data.id, url: url });
+    const analysisId = submitData.data.id;
+
+    // 2) POLL: Keep checking until scan is complete
+    const MAX_ATTEMPTS = 15;
+    const POLL_INTERVAL = 3000; // 3 seconds
+
+    let resultData = null;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      await sleep(POLL_INTERVAL);
+
+      const analysisResponse = await fetch(VT_BASE + "/analyses/" + analysisId, {
+        headers: { "x-apikey": VT_API_KEY }
+      });
+
+      const analysisData = await analysisResponse.json();
+
+      if (!analysisResponse.ok) {
+        if (analysisResponse.status === 429) {
+          await sleep(4000);
+          continue;
+        }
+        return res.status(analysisResponse.status).json({
+          error: "Could not get analysis result",
+          details: analysisData
+        });
+      }
+
+      if (analysisData.data.attributes.status === "completed") {
+        resultData = analysisData;
+        break;
+      }
+    }
+
+    if (!resultData) {
+      return res.status(504).json({
+        error: "التحليل أخد وقت أطول من المتوقع، جرب تاني بعد شوية"
+      });
+    }
+
+    // 3) Extract domain from URL
+    let domain = url;
+    try {
+      domain = new URL(url).hostname;
+    } catch (e) {
+      domain = url.split("/")[0];
+    }
+
+    // 4) Get real domain information
+    const domainInfo = await getDomainInfo(domain);
+
+    // 5) Return final result with domain info
+    const stats = resultData.data.attributes.stats || {};
+    const results = resultData.data.attributes.results || {};
+
+    const engines = Object.values(results).map(function (engine) {
+      return {
+        name: engine.engine_name,
+        category: engine.category,
+        result: engine.result
+      };
+    });
+
+    // Calculate reputation based on results (neutral English codes -
+    // the frontend maps these to the current language)
+    let reputation = "good";
+    const malicious = stats.malicious || 0;
+    const suspicious = stats.suspicious || 0;
+    if (malicious > 0) {
+      reputation = "bad";
+    } else if (suspicious > 0) {
+      reputation = "medium";
+    }
+    domainInfo.reputation = reputation;
+
+    res.json({
+      url: url,
+      malicious: stats.malicious || 0,
+      suspicious: stats.suspicious || 0,
+      harmless: stats.harmless || 0,
+      undetected: stats.undetected || 0,
+      engines: engines,
+      domainInfo: domainInfo
+    });
 
   } catch (error) {
-    console.error("Submit-scan error:", error);
-    res.status(500).json({ error: "حدث خطأ أثناء إرسال الرابط للفحص" });
+    console.error("Check-link error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء فحص الرابط" });
   }
 });
 
 // ============================================================
-// فحص الملفات - الخطوة 1: رفع الملف
+// File Scanner - Upload file to VirusTotal
 // ============================================================
 app.post("/api/submit-file-scan", upload.single("file"), async function (req, res) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "من فضلك اختر ملف للفحص" });
     }
+
     if (!VT_API_KEY) {
       return res.status(500).json({ error: "VirusTotal API key is not configured" });
     }
@@ -151,14 +233,19 @@ app.post("/api/submit-file-scan", upload.single("file"), async function (req, re
 
     const uploadResponse = await fetch(VT_BASE + "/files", {
       method: "POST",
-      headers: { "x-apikey": VT_API_KEY },
+      headers: {
+        "x-apikey": VT_API_KEY
+      },
       body: formData
     });
 
     const uploadData = await uploadResponse.json();
 
     if (!uploadResponse.ok) {
-      return res.status(uploadResponse.status).json({ error: "VirusTotal error", details: uploadData });
+      return res.status(uploadResponse.status).json({
+        error: "VirusTotal error",
+        details: uploadData
+      });
     }
 
     res.json({
@@ -175,8 +262,7 @@ app.post("/api/submit-file-scan", upload.single("file"), async function (req, re
 });
 
 // ============================================================
-// الخطوة 2 (مشتركة بين الروابط والملفات): التحقق من حالة التحليل
-// كل نداء هنا سريع جدًا - ده اللي بيتجنب مشكلة الـ Vercel timeout
+// Check file scan status
 // ============================================================
 app.get("/api/scan-status/:analysisId", async function (req, res) {
   try {
@@ -194,9 +280,14 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
 
     if (!resultResponse.ok) {
       if (resultResponse.status === 429) {
-        return res.status(429).json({ error: "تم تجاوز الحد المسموح من الطلبات، حاول تاني بعد شوية" });
+        return res.status(429).json({
+          error: "تم تجاوز الحد المسموح من الطلبات، حاول تاني بعد شوية"
+        });
       }
-      return res.status(resultResponse.status).json({ error: "Could not get analysis result", details: resultData });
+      return res.status(resultResponse.status).json({
+        error: "Could not get analysis result",
+        details: resultData
+      });
     }
 
     const status = resultData.data.attributes.status;
@@ -209,36 +300,24 @@ app.get("/api/scan-status/:analysisId", async function (req, res) {
     const results = resultData.data.attributes.results || {};
 
     const engines = Object.values(results).map(function (engine) {
-      return { name: engine.engine_name, category: engine.category, result: engine.result };
+      return {
+        name: engine.engine_name,
+        category: engine.category,
+        result: engine.result
+      };
     });
 
-    // ===== لو التحليل ده لرابط، هات معلومات النطاق دلوقتي بس (مرة واحدة) =====
-    const urlInfo = resultData.meta && resultData.meta.url_info ? resultData.meta.url_info : null;
     const fileInfo = resultData.meta && resultData.meta.file_info ? resultData.meta.file_info : null;
-
-    let domainInfo = undefined;
-    if (urlInfo && urlInfo.url) {
-      let domain = urlInfo.url;
-      try { domain = new URL(urlInfo.url).hostname; } catch (e) { /* keep as-is */ }
-
-      domainInfo = await getDomainInfo(domain);
-
-      const malicious = stats.malicious || 0;
-      const suspicious = stats.suspicious || 0;
-      domainInfo.reputation = malicious > 0 ? "سيئة" : (suspicious > 0 ? "متوسطة" : "جيدة");
-    }
 
     res.json({
       status: "completed",
-      url: urlInfo ? urlInfo.url : undefined,
       sha256: fileInfo ? fileInfo.sha256 : undefined,
       md5: fileInfo ? fileInfo.md5 : undefined,
       malicious: stats.malicious || 0,
       suspicious: stats.suspicious || 0,
       harmless: stats.harmless || 0,
       undetected: stats.undetected || 0,
-      engines: engines,
-      domainInfo: domainInfo
+      engines: engines
     });
 
   } catch (error) {
